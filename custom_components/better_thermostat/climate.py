@@ -88,6 +88,7 @@ from .utils.const import (
     SERVICE_RESTORE_SAVED_TARGET_TEMPERATURE,
     SERVICE_SET_TEMP_TARGET_TEMPERATURE,
     SUPPORT_FLAGS,
+    CONF_MAIN_SWITCH,
     VERSION,
 )
 from .utils.controlling import control_queue, control_trv
