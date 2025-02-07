@@ -188,6 +188,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
                 entry.entry_id,
                 device_class="better_thermostat",
                 state_class="better_thermostat_state",
+                main_switch=entry.data.get(CONF_MAIN_SWITCH, None)  # Hinzufügen des main_switch Parameters
             )
         ]
     )
@@ -266,6 +267,7 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         unique_id,
         device_class,
         state_class,
+        main_switch,
     ):
         """Initialize the thermostat.
 
@@ -314,6 +316,7 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         self.bt_hvac_mode = None
         self.closed_window_triggered = False
         self.closed_door_triggered = False
+        self.main_switch = main_switch
         self.call_for_heat = True
         self.ignore_states = False
         self.last_dampening_timestamp = None
