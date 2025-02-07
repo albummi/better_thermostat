@@ -219,6 +219,16 @@ async def control_trv(self, heater_entity_id=None):
         # if we don't need to heat, we force HVACMode to be off
         if self.call_for_heat is False:
             _new_hvac_mode = HVACMode.OFF
+        
+        # Schalten Sie den Hauptschalter basierend auf dem HVAC-Modus um
+        if self.main_switch is not None:
+            await self.hass.services.async_call(
+                "switch",
+                "turn_on" if _new_hvac_mode != HVACMode.OFF else "turn_off",
+                {"entity_id": self.main_switch},
+                blocking=True,
+                context=self.context,
+            )
 
         # Manage TRVs with no HVACMode.OFF
         _no_off_system_mode = (
