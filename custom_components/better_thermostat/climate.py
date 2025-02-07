@@ -164,7 +164,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
         SERVICE_RESET_HEATING_POWER, {}, "reset_heating_power"
     )
 
-async_add_devices(
+async_add_entities(
     [
         BetterThermostat(
             entry.data.get(CONF_NAME),
