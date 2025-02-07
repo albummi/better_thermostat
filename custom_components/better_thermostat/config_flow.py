@@ -356,6 +356,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ),
                     vol.Optional(CONF_MAIN_SWITCH): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain="switch", multiple=False)
+                    ),
                     vol.Optional(CONF_COOLER): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain="climate", multiple=False)
                     ),
