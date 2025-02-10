@@ -10,7 +10,16 @@ from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 
 from homeassistant.components.climate.const import HVACMode
 
-from custom_components.better_thermostat.utils.const import CONF_HEAT_AUTO_SWAPPED
+from custom_components.better_thermostat.utils.const import (
+    CONF_HEAT_AUTO_SWAPPED,
+    CONF_SLEEP_MODE,
+    CONF_SLEEP_TEMPERATURE,
+    CONF_SLEEP_DELAY,
+    CONF_SLEEP_DELAY_AFTER,
+    CONF_WINDOW_OVERRIDE,
+    CONF_DOOR_OVERRIDE,
+    CONF_DOOR_TEMPERATURE
+)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,7 +88,7 @@ def heating_power_valve_position(self, entity_id):
         valve_pos = 1.0
 
     _LOGGER.debug(
-        f"better_thermostat {self.device_name}: {entity_id} / heating_power_valve_position - temp diff: {round(_temp_diff, 1)} - heating power: {round(self.heating_power, 4)} - expected valve position: {round(valve_pos * 100)}%"
+        f"better_thermostat {self.device_name}: {entity_id} / heating_power_valve_position - temp diff: {round(_temp_diff, 1)} - heating power: {round(self.heating_power, 4)} - expected valve position: {round(valve_pos * 100, 1)}"
     )
     return valve_pos
 
