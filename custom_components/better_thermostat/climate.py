@@ -444,7 +444,21 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
             _async_startup()
         else:
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
-
+            
+        if self.main_switch:
+            async_track_state_change_event(
+                self.hass, [self.main_switch], self._async_switch_state_listener
+            )
+    @callback
+    async def _async_switch_state_listener(self, event):
+        """Handle state changes for the main switch."""
+        new_state = event.data.get("new_state")
+        if new_state.state == "on":
+            self.bt_hvac_mode = HVACMode.HEAT
+        else:
+            self.bt_hvac_mode = HVACMode.OFF
+        await self.async_update_ha_state()   
+        
     async def _trigger_check_weather(self, event=None):
         _check = await check_all_entities(self)
         if _check is False:
