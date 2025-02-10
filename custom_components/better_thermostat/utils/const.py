@@ -55,6 +55,13 @@ CONF_NO_SYSTEM_MODE_OFF = "no_off_system_mode"
 CONF_TOLERANCE = "tolerance"
 CONF_TARGET_TEMP_STEP = "target_temp_step"
 CONF_MAIN_SWITCH = "main_switch"
+CONF_SLEEP_MODE = "sleep_mode"
+CONF_SLEEP_TEMPERATURE = "sleep_temperature"
+CONF_SLEEP_DELAY = "sleep_delay"
+CONF_SLEEP_DELAY_AFTER = "sleep_delay_after"
+CONF_WINDOW_OVERRIDE = "window_override"
+CONF_DOOR_OVERRIDE = "door_override"
+CONF_DOOR_TEMPERATURE = "door_temperature"
 
 # Neue Konfigurationen für Türsensoren
 CONF_SENSOR_DOOR = "door_sensors"
