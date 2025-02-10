@@ -382,6 +382,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             multiple=False,
                         )
                     ),
+
+                    # Modified fields in async_step_user
                     vol.Optional(CONF_SENSOR_WINDOW): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=[
@@ -393,6 +395,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             multiple=True,
                         )
                     ),
+                    vol.Optional(CONF_WINDOW_TIMEOUT): selector.DurationSelector(),
+                    vol.Optional(CONF_WINDOW_TIMEOUT_AFTER): selector.DurationSelector(),
                     vol.Optional(CONF_SENSOR_DOOR): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=[
@@ -404,18 +408,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             multiple=True,
                         )
                     ),
+                    vol.Optional(CONF_DOOR_TIMEOUT): selector.DurationSelector(),
+                    vol.Optional(CONF_DOOR_TIMEOUT_AFTER): selector.DurationSelector(),
+                    vol.Optional(CONF_DOOR_OVERRIDE, default=False): bool,
+                    vol.Optional(CONF_DOOR_TEMPERATURE, default=20): int,
+                    
                     vol.Optional(CONF_WEATHER): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain="weather", multiple=False)
                     ),
-                    vol.Optional(CONF_WINDOW_TIMEOUT): selector.DurationSelector(),
-                    vol.Optional(
-                        CONF_WINDOW_TIMEOUT_AFTER
-                    ): selector.DurationSelector(),
-
-                    vol.Optional(CONF_DOOR_TIMEOUT): selector.DurationSelector(),
-                    vol.Optional(
-                        CONF_DOOR_TIMEOUT_AFTER
-                    ): selector.DurationSelector(),
                     
                     vol.Optional(
                         CONF_OFF_TEMPERATURE,
@@ -452,7 +452,79 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         return await self.async_step_user()
+async def async_step_window_door_sensors(self, user_input=None):
+    errors = {}
 
+    if user_input is not None:
+        self.data.update(user_input)
+        if "base" not in errors:
+            return await self.async_step_sleep_settings()
+
+    user_input = user_input or {}
+
+    return self.async_show_form(
+        step_id="window_door_sensors",
+        data_schema=vol.Schema(
+            {
+                vol.Optional(CONF_SENSOR_WINDOW): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        domain=[
+                            "group",
+                            "sensor",
+                            "input_boolean",
+                            "binary_sensor",
+                        ],
+                        multiple=True,
+                    )
+                ),
+                vol.Optional(CONF_WINDOW_TIMEOUT): selector.DurationSelector(),
+                vol.Optional(CONF_WINDOW_TIMEOUT_AFTER): selector.DurationSelector(),
+                vol.Optional(CONF_SENSOR_DOOR): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        domain=[
+                            "group",
+                            "sensor",
+                            "input_boolean",
+                            "binary_sensor",
+                        ],
+                        multiple=True,
+                    )
+                ),
+                vol.Optional(CONF_DOOR_TIMEOUT): selector.DurationSelector(),
+                vol.Optional(CONF_DOOR_TIMEOUT_AFTER): selector.DurationSelector(),
+                vol.Optional(CONF_DOOR_OVERRIDE, default=False): bool,
+                vol.Optional(CONF_DOOR_TEMPERATURE, default=20): int,
+            }
+        ),
+        errors=errors,
+        last_step=False,
+    )
+
+        async def async_step_sleep_settings(self, user_input=None):
+            errors = {}
+        
+            if user_input is not None:
+                self.data.update(user_input)
+                if "base" not in errors:
+                    return await self.async_step_advanced()
+        
+            user_input = user_input or {}
+        
+            return self.async_show_form(
+                step_id="sleep_settings",
+                data_schema=vol.Schema(
+                    {
+                        vol.Optional(CONF_SLEEP_MODE, default=False): bool,
+                        vol.Optional(CONF_SLEEP_TEMPERATURE, default=16): int,
+                        vol.Optional(CONF_SLEEP_DELAY): selector.DurationSelector(),
+                        vol.Optional(CONF_SLEEP_DELAY_AFTER): selector.DurationSelector(),
+                    }
+                ),
+                errors=errors,
+                last_step=False,
+            )
+    
+    
     async def async_step_advanced(
         self, user_input=None, _trv_config=None, _update_config=None
     ):
