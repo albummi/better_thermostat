@@ -42,6 +42,12 @@ from .utils.const import (
     CONF_TARGET_TEMP_STEP,
     CalibrationMode,
     CalibrationType,
+    CONF_SLEEP_MODE,
+    CONF_SLEEP_TEMPERATURE,
+    CONF_SLEEP_DELAY,
+    CONF_SLEEP_DELAY_AFTER,
+    CONF_DOOR_OVERRIDE,
+    CONF_DOOR_TEMPERATURE,
 )
 
 from . import DOMAIN  # pylint:disable=unused-import
@@ -347,7 +353,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         user_input = user_input or {}
 
-        return self.async_show_form(
+         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
@@ -382,6 +388,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             multiple=False,
                         )
                     ),
+                    vol.Optional(CONF_WEATHER): selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain="weather", multiple=False)
+                    ),
                     vol.Optional(CONF_SENSOR_WINDOW): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=[
@@ -393,6 +402,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             multiple=True,
                         )
                     ),
+                    vol.Optional(CONF_WINDOW_TIMEOUT): selector.DurationSelector(),
+                    vol.Optional(CONF_WINDOW_TIMEOUT_AFTER): selector.DurationSelector(),
                     vol.Optional(CONF_SENSOR_DOOR): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=[
@@ -404,37 +415,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             multiple=True,
                         )
                     ),
-                    vol.Optional(CONF_WEATHER): selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain="weather", multiple=False)
-                    ),
-                    vol.Optional(CONF_WINDOW_TIMEOUT): selector.DurationSelector(),
-                    vol.Optional(
-                        CONF_WINDOW_TIMEOUT_AFTER
-                    ): selector.DurationSelector(),
-
                     vol.Optional(CONF_DOOR_TIMEOUT): selector.DurationSelector(),
-                    vol.Optional(
-                        CONF_DOOR_TIMEOUT_AFTER
-                    ): selector.DurationSelector(),
-                    
-                    vol.Optional(
-                        CONF_OFF_TEMPERATURE,
-                        default=user_input.get(CONF_OFF_TEMPERATURE, 20),
-                    ): int,
-
-                    vol.Optional(
-                        CONF_TOLERANCE, default=user_input.get(CONF_TOLERANCE, 0.0)
-                    ): vol.All(vol.Coerce(float), vol.Range(min=0)),
-                    vol.Optional(
-                        CONF_TARGET_TEMP_STEP,
-                        default=str(user_input.get(CONF_TARGET_TEMP_STEP, "0.0")),
-                    ): TEMP_STEP_SELECTOR,
+                    vol.Optional(CONF_DOOR_TIMEOUT_AFTER): selector.DurationSelector(),
+                    vol.Optional(CONF_OFF_TEMPERATURE, default=user_input.get(CONF_OFF_TEMPERATURE, 20)): int,
+                    vol.Optional(CONF_TOLERANCE, default=user_input.get(CONF_TOLERANCE, 0.0)): vol.All(vol.Coerce(float), vol.Range(min=0)),
+                    vol.Optional(CONF_TARGET_TEMP_STEP, default=str(user_input.get(CONF_TARGET_TEMP_STEP, "0.0"))): TEMP_STEP_SELECTOR,
+                    vol.Optional(CONF_SLEEP_MODE, default=False): bool,
+                    vol.Optional(CONF_SLEEP_TEMPERATURE, default=16): int,
+                    vol.Optional(CONF_SLEEP_DELAY): selector.DurationSelector(),
+                    vol.Optional(CONF_SLEEP_DELAY_AFTER): selector.DurationSelector(),
+                    vol.Optional(CONF_DOOR_OVERRIDE, default=False): bool,
+                    vol.Optional(CONF_DOOR_TEMPERATURE, default=20): int,
                 }
             ),
             errors=errors,
             last_step=False,
         )
-
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for a config entry."""
