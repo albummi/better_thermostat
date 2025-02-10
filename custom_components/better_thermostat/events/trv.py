@@ -1,7 +1,15 @@
 import asyncio
 from datetime import datetime
 import logging
-from custom_components.better_thermostat.utils.const import CONF_HOMEMATICIP
+from custom_components.better_thermostat.utils.const import (
+    CONF_HOMEMATICIP,
+    CONF_SLEEP_MODE,
+    CONF_SLEEP_TEMPERATURE,
+    CONF_SLEEP_DELAY,
+    CONF_SLEEP_DELAY_AFTER,
+    CONF_DOOR_OVERRIDE,
+    CONF_DOOR_TEMPERATURE
+)
 
 from homeassistant.components.climate.const import (
     HVACMode,
@@ -60,8 +68,6 @@ async def trigger_trv_change(self, event):
     # Check if the update is coming from the code
     if self.context == event.context:
         return
-
-    # _LOGGER.debug(f"better_thermostat {self.device_name}: TRV {entity_id} update received")
 
     _org_trv_state = self.hass.states.get(entity_id)
     child_lock = self.real_trvs[entity_id]["advanced"].get("child_lock")
@@ -233,13 +239,13 @@ async def update_hvac_action(self):
     #         state = self.hass.states.get(entity_id)
     #         if state is None:
     #             continue
-
+    # 
     #         if state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.HEATING:
     #             hvac_action = HVACAction.HEATING
     #             break
     #         elif state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.IDLE:
     #             hvac_action = HVACAction.IDLE
-
+    # 
     # return the most common action if it is not off
     states = [
         state
