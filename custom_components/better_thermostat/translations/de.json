@@ -18,7 +18,13 @@
                     "window_timeout": "Fenster-Timeout",
                     "window_timeout_after": "Fenster-Timeout nach",
                     "door_timeout": "Tür-Timeout",
-                    "door_timeout_after": "Tür-Timeout nach"
+                    "door_timeout_after": "Tür-Timeout nach",
+                    "sleep_mode": "Schlafmodus aktivieren",
+                    "sleep_temperature": "Temperatur im Schlafmodus",
+                    "sleep_delay": "Verzögerung vor dem Aktivieren des Schlafmodus",
+                    "sleep_delay_after": "Verzögerung vor dem Deaktivieren des Schlafmodus",
+                    "door_override": "Tür-Override aktivieren",
+                    "door_temperature": "Temperatur, wenn die Tür geöffnet ist"
                 }
             }
         }
@@ -40,7 +46,13 @@
                     "window_timeout": "Fenster-Timeout",
                     "window_timeout_after": "Fenster-Timeout nach",
                     "door_timeout": "Tür-Timeout",
-                    "door_timeout_after": "Tür-Timeout nach"
+                    "door_timeout_after": "Tür-Timeout nach",
+                    "sleep_mode": "Schlafmodus aktivieren",
+                    "sleep_temperature": "Temperatur im Schlafmodus",
+                    "sleep_delay": "Verzögerung vor dem Aktivieren des Schlafmodus",
+                    "sleep_delay_after": "Verzögerung vor dem Deaktivieren des Schlafmodus",
+                    "door_override": "Tür-Override aktivieren",
+                    "door_temperature": "Temperatur, wenn die Tür geöffnet ist"
                 }
             }
         }
