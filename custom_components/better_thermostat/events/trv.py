@@ -72,7 +72,8 @@ async def trigger_trv_change(self, event):
     _org_trv_state = self.hass.states.get(entity_id)
     child_lock = self.real_trvs[entity_id]["advanced"].get("child_lock")
 
-    _new_current_temp = convert_to_float(
+    _new_current_temp = await self.hass.async_add_executor_job(
+        convert_to_float,
         str(_org_trv_state.attributes.get("current_temperature", None)),
         self.device_name,
         "TRV_current_temp",
@@ -113,15 +114,17 @@ async def trigger_trv_change(self, event):
             )
             _main_change = False
             if self.real_trvs[entity_id]["calibration"] == 0:
-                self.real_trvs[entity_id]["last_calibration"] = (
-                    await get_current_offset(self, entity_id)
+                self.real_trvs[entity_id]["last_calibration"] = await self.hass.async_add_executor_job(
+                    get_current_offset, self, entity_id
                 )
 
     if self.ignore_states:
         return
 
     try:
-        mapped_state = convert_inbound_states(self, entity_id, _org_trv_state)
+        mapped_state = await self.hass.async_add_executor_job(
+            mode_remap, self, entity_id, _org_trv_state.state, True
+        )
     except TypeError:
         _LOGGER.debug(
             f"better_thermostat {self.device_name}: remapping TRV {entity_id} state failed, skipping"
@@ -150,12 +153,14 @@ async def trigger_trv_change(self, event):
     if "temperature" not in old_state.attributes:
         _main_key = "target_temp_low"
 
-    _old_heating_setpoint = convert_to_float(
+    _old_heating_setpoint = await self.hass.async_add_executor_job(
+        convert_to_float,
         str(old_state.attributes.get(_main_key, None)),
         self.device_name,
         "trigger_trv_change()",
     )
-    _new_heating_setpoint = convert_to_float(
+    _new_heating_setpoint = await self.hass.async_add_executor_job(
+        convert_to_float,
         str(new_state.attributes.get(_main_key, None)),
         self.device_name,
         "trigger_trv_change()",
@@ -282,7 +287,7 @@ async def update_hvac_action(self):
         await self.async_update_ha_state(force_refresh=True)
 
 
-def convert_inbound_states(self, entity_id, state: State) -> str:
+async def convert_inbound_states(self, entity_id, state: State) -> str:
     """Convert hvac mode in a thermostat state from HA
     Parameters
     ----------
@@ -301,14 +306,16 @@ def convert_inbound_states(self, entity_id, state: State) -> str:
     if state.attributes is None or state.state is None:
         raise TypeError("convert_inbound_states() received None state, cannot convert")
 
-    remapped_state = mode_remap(self, entity_id, str(state.state), True)
+    remapped_state = await self.hass.async_add_executor_job(
+        mode_remap, self, entity_id, str(state.state), True
+    )
 
     if remapped_state not in (HVACMode.OFF, HVACMode.HEAT):
         return None
     return remapped_state
 
 
-def convert_outbound_states(self, entity_id, hvac_mode) -> dict | None:
+async def convert_outbound_states(self, entity_id, hvac_mode) -> dict | None:
     """Creates the new outbound thermostat state.
     Parameters
     ----------
@@ -343,14 +350,18 @@ def convert_outbound_states(self, entity_id, hvac_mode) -> dict | None:
                 self.device_name,
             )
             _new_heating_setpoint = self.bt_target_temp
-            _new_local_calibration = calculate_calibration_local(self, entity_id)
+            _new_local_calibration = await self.hass.async_add_executor_job(
+                calculate_calibration_local, self, entity_id
+            )
 
             if _new_local_calibration is None:
                 return None
 
         else:
             if _calibration_type == CalibrationType.LOCAL_BASED:
-                _new_local_calibration = calculate_calibration_local(self, entity_id)
+                _new_local_calibration = await self.hass.async_add_executor_job(
+                    calculate_calibration_local, self, entity_id
+                )
 
                 _new_heating_setpoint = self.bt_target_temp
 
@@ -358,8 +369,8 @@ def convert_outbound_states(self, entity_id, hvac_mode) -> dict | None:
                 if _calibration_mode == CalibrationMode.NO_CALIBRATION:
                     _new_heating_setpoint = self.bt_target_temp
                 else:
-                    _new_heating_setpoint = calculate_calibration_setpoint(
-                        self, entity_id
+                    _new_heating_setpoint = await self.hass.async_add_executor_job(
+                        calculate_calibration_setpoint, self, entity_id
                     )
 
             _system_modes = self.real_trvs[entity_id]["hvac_modes"]
@@ -367,7 +378,9 @@ def convert_outbound_states(self, entity_id, hvac_mode) -> dict | None:
 
             # Handling different devices with or without system mode reported or contained in the device config
 
-            hvac_mode = mode_remap(self, entity_id, str(hvac_mode), False)
+            hvac_mode = await self.hass.async_add_executor_job(
+                mode_remap, self, entity_id, str(hvac_mode), False
+            )
 
             if not _has_system_mode:
                 _LOGGER.debug(
