@@ -353,7 +353,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         user_input = user_input or {}
 
-         return self.async_show_form(
+        return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
@@ -431,7 +431,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             last_step=False,
         )
-
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for a config entry."""
 
