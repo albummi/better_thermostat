@@ -6,6 +6,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import ConfigType
+import homeassistant.loader as loader
 import voluptuous as vol
 
 from .utils.const import (
@@ -40,6 +41,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
+    
+    # Vor dem Start des Ereignisloops importieren
+    loader.import_module("custom_components.better_thermostat.climate")
+    
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
@@ -81,7 +86,7 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         new[CONF_DOOR_TIMEOUT] = 0
         config_entry.version = 3
         hass.config_entries.async_update_entry(config_entry, data=new)
-                                            
+                                             
     if config_entry.version == 3:
         new = {**config_entry.data}
         for trv in new[CONF_HEATER]:
