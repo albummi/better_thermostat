@@ -89,13 +89,13 @@ async def trigger_temperature_change(self, event):
         await self.control_queue_task.put(self)
         
         # Handle sleep mode
-        if self.sleep_mode and self.door_override:
-            if self.door_open:
+        if hasattr(self, 'sleep_mode') and self.sleep_mode and hasattr(self, 'door_override') and self.door_override:
+            if hasattr(self, 'door_open') and self.door_open:
                 self.target_temperature = self.door_temperature
                 _LOGGER.debug(
                     f"better_thermostat {self.device_name}: Door is open, setting temperature to {self.door_temperature} due to door override"
                 )
-            elif self.sleep_mode:
+            elif hasattr(self, 'sleep_mode') and self.sleep_mode:
                 self.target_temperature = self.sleep_temperature
                 _LOGGER.debug(
                     f"better_thermostat {self.device_name}: Sleep mode active, setting temperature to {self.sleep_temperature}"
