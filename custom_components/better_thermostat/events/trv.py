@@ -29,7 +29,6 @@ from custom_components.better_thermostat.utils.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
 class TaskManager:
     def __init__(self):
         self.tasks = set()
@@ -39,7 +38,6 @@ class TaskManager:
         self.tasks.add(task)
         task.add_done_callback(self.tasks.discard)
         return task
-
 
 async def control_queue(self):
     """The actual control loop.
@@ -97,7 +95,6 @@ async def control_queue(self):
             raise
         except Exception as e:
             _LOGGER.error(f"better_thermostat {self.device_name}: Error in control_queue: {e}")
-
 
 async def control_trv(self, heater_entity_id=None):
     """This is the main controller for the real TRV
@@ -323,7 +320,6 @@ async def control_trv(self, heater_entity_id=None):
         self.real_trvs[heater_entity_id]["ignore_trv_states"] = False
         return True
 
-
 def handle_sensors(self, _remapped_states):
     """Handle window and door sensors"""
     _converted_hvac_mode = _remapped_states.get("system_mode", None)
@@ -365,7 +361,6 @@ def handle_sensors(self, _remapped_states):
 
     return _hvac_mode_send
 
-
 async def check_system_mode(self, heater_entity_id=None):
     """check system mode"""
     _timeout = 0
@@ -382,7 +377,6 @@ async def check_system_mode(self, heater_entity_id=None):
     await asyncio.sleep(2)
     _real_trv["system_mode_received"] = True
     return True
-
 
 async def check_target_temperature(self, heater_entity_id=None):
     """Check if target temperature is reached."""
