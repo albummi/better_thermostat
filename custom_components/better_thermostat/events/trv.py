@@ -15,11 +15,6 @@ from custom_components.better_thermostat.adapters.delegate import (
     set_hvac_mode,
 )
 
-from custom_components.better_thermostat.events.trv import (
-    convert_outbound_states,
-    update_hvac_action,
-)
-
 from custom_components.better_thermostat.utils.helpers import convert_to_float
 
 from custom_components.better_thermostat.utils.const import (
@@ -31,7 +26,6 @@ from custom_components.better_thermostat.utils.const import (
     CONF_DOOR_OVERRIDE,
     CONF_DOOR_TEMPERATURE
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 
