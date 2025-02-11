@@ -131,7 +131,7 @@ async def control_trv(self, heater_entity_id=None):
             "controlling()",
         )
 
-        _remapped_states = convert_outbound_states(
+        _remapped_states = await convert_outbound_states(
             self, heater_entity_id, self.bt_hvac_mode
         )
         if not isinstance(_remapped_states, dict):
