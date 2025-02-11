@@ -437,13 +437,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_TARGET_TEMP_STEP, default=str(user_input.get(CONF_TARGET_TEMP_STEP, "0.0"))): TEMP_STEP_SELECTOR,
                     vol.Optional(CONF_SLEEP_MODE, default=user_input.get(CONF_SLEEP_MODE, "")): selector.EntitySelector(
                         selector.EntitySelectorConfig(
-                            domain=["input_boolean", "switch"],
+                            domain=["input_boolean", "switch", "binary_sensor", "group", "sensor"],
                             multiple=False,
                         )
                     ),
                     vol.Optional(CONF_DOOR_OVERRIDE, default=user_input.get(CONF_DOOR_OVERRIDE, "")): selector.EntitySelector(
                         selector.EntitySelectorConfig(
-                            domain=["input_boolean", "switch"],
+                            domain=["input_boolean", "switch", "binary_sensor", "group", "sensor"],
                             multiple=False,
                         )
                     ),
