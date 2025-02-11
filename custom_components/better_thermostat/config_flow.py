@@ -288,7 +288,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.data[CONF_WEATHER] = None
             if CONF_COOLER not in self.data:
                 self.data[CONF_COOLER] = None
-
+            if CONF_SLEEP_MODE not in self.data:
+                self.data[CONF_SLEEP_MODE] = None
+            if CONF_DOOR_OVERRIDE not in self.data:
+                self.data[CONF_DOOR_OVERRIDE] = None
+            if CONF_SLEEP_TEMPERATURE not in self.data:
+                self.data[CONF_SLEEP_TEMPERATURE] = 16
+            if CONF_DOOR_TEMPERATURE not in self.data:
+                self.data[CONF_DOOR_TEMPERATURE] = 20
+        
             if CONF_WINDOW_TIMEOUT in self.data:
                 self.data[CONF_WINDOW_TIMEOUT] = (
                     int(
@@ -300,7 +308,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             else:
                 self.data[CONF_WINDOW_TIMEOUT] = 0
-
+        
             if CONF_WINDOW_TIMEOUT_AFTER in self.data:
                 self.data[CONF_WINDOW_TIMEOUT_AFTER] = (
                     int(
@@ -312,7 +320,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             else:
                 self.data[CONF_WINDOW_TIMEOUT_AFTER] = 0
-
+        
             if CONF_DOOR_TIMEOUT in self.data:
                 self.data[CONF_DOOR_TIMEOUT] = (
                     int(
@@ -324,7 +332,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             else:
                 self.data[CONF_DOOR_TIMEOUT] = 0
-
+        
             if CONF_DOOR_TIMEOUT_AFTER in self.data:
                 self.data[CONF_DOOR_TIMEOUT_AFTER] = (
                     int(
@@ -336,7 +344,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             else:
                 self.data[CONF_DOOR_TIMEOUT_AFTER] = 0
-
+        
             if "base" not in errors:
                 for trv in self.heater_entity_id:
                     _intigration = await get_trv_intigration(self, trv)
