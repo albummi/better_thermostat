@@ -439,12 +439,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         selector.EntitySelectorConfig(
                             domain=["input_boolean", "switch", "binary_sensor", "group", "sensor"],
                             multiple=False,
+                            allow_empty=True,
                         )
                     ),
                     vol.Optional(CONF_DOOR_OVERRIDE, default=user_input.get(CONF_DOOR_OVERRIDE, "")): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=["input_boolean", "switch", "binary_sensor", "group", "sensor"],
                             multiple=False,
+                            allow_empty=True,
                         )
                     ),
                     vol.Optional(CONF_SLEEP_TEMPERATURE, default=16): int,
