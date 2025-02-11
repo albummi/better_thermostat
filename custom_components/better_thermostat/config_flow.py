@@ -296,9 +296,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_COOLER not in self.data:
                 self.data[CONF_COOLER] = None
             if CONF_SLEEP_MODE not in self.data:
-                self.data[CONF_SLEEP_MODE] = None
+                self.data[CONF_SLEEP_MODE] = ""
             if CONF_DOOR_OVERRIDE not in self.data:
-                self.data[CONF_DOOR_OVERRIDE] = None
+                self.data[CONF_DOOR_OVERRIDE] = ""
             if CONF_SLEEP_TEMPERATURE not in self.data:
                 self.data[CONF_SLEEP_TEMPERATURE] = 16
             if CONF_DOOR_TEMPERATURE not in self.data:
