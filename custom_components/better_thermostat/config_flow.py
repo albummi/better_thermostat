@@ -284,9 +284,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self.data[CONF_NAME] == "":
                 errors["base"] = "no_name"
             if CONF_SENSOR_WINDOW not in self.data:
-                self.data[CONF_SENSOR_WINDOW] = None
+                self.data[CONF_SENSOR_WINDOW] = []
             if CONF_SENSOR_DOOR not in self.data:
-                self.data[CONF_SENSOR_DOOR] = None
+                self.data[CONF_SENSOR_DOOR] = []
             if CONF_HUMIDITY not in self.data:
                 self.data[CONF_HUMIDITY] = None
             if CONF_OUTDOOR_SENSOR not in self.data:
