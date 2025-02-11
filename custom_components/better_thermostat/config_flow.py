@@ -36,18 +36,11 @@ from .utils.const import (
     CONF_WINDOW_TIMEOUT_AFTER,
     CONF_DOOR_TIMEOUT,
     CONF_DOOR_TIMEOUT_AFTER,
-    CONF_MAIN_SWITCH,
     CONF_CALIBRATION_MODE,
     CONF_TOLERANCE,
     CONF_TARGET_TEMP_STEP,
     CalibrationMode,
     CalibrationType,
-    CONF_SLEEP_MODE,
-    CONF_SLEEP_TEMPERATURE,
-    CONF_SLEEP_DELAY,
-    CONF_SLEEP_DELAY_AFTER,
-    CONF_DOOR_OVERRIDE,
-    CONF_DOOR_TEMPERATURE,
 )
 
 from . import DOMAIN  # pylint:disable=unused-import
@@ -165,27 +158,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.trv_bundle[self.i]["advanced"] = user_input
             self.trv_bundle[self.i]["adapter"] = None
-    
+
             self.i += 1
             if len(self.trv_bundle) > self.i:
                 return await self.async_step_advanced(None, self.trv_bundle[self.i])
-    
+
             _has_off_mode = True
             for trv in self.trv_bundle:
                 if HVACMode.OFF not in self.hass.states.get(
                     trv.get("trv")
                 ).attributes.get("hvac_modes"):
                     _has_off_mode = False
-    
+
             if _has_off_mode is False:
                 return await self.async_step_confirm(None, "no_off_mode")
-    
-            # Speichern der Konfiguration von CONF_SLEEP_MODE und CONF_DOOR_OVERRIDE
-            self.data[CONF_SLEEP_MODE] = user_input.get(CONF_SLEEP_MODE, "")
-            self.data[CONF_DOOR_OVERRIDE] = user_input.get(CONF_DOOR_OVERRIDE, "")
-            self.data[CONF_SLEEP_TEMPERATURE] = user_input.get(CONF_SLEEP_TEMPERATURE, 16)
-            self.data[CONF_DOOR_TEMPERATURE] = user_input.get(CONF_DOOR_TEMPERATURE, 20)
-    
             return await self.async_step_confirm()
 
         user_input = user_input or {}
@@ -284,9 +270,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self.data[CONF_NAME] == "":
                 errors["base"] = "no_name"
             if CONF_SENSOR_WINDOW not in self.data:
-                self.data[CONF_SENSOR_WINDOW] = []
+                self.data[CONF_SENSOR_WINDOW] = None
             if CONF_SENSOR_DOOR not in self.data:
-                self.data[CONF_SENSOR_DOOR] = []
+                self.data[CONF_SENSOR_DOOR] = None
             if CONF_HUMIDITY not in self.data:
                 self.data[CONF_HUMIDITY] = None
             if CONF_OUTDOOR_SENSOR not in self.data:
@@ -295,15 +281,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.data[CONF_WEATHER] = None
             if CONF_COOLER not in self.data:
                 self.data[CONF_COOLER] = None
-            if CONF_SLEEP_MODE not in self.data:
-                self.data[CONF_SLEEP_MODE] = ""
-            if CONF_DOOR_OVERRIDE not in self.data:
-                self.data[CONF_DOOR_OVERRIDE] = ""
-            if CONF_SLEEP_TEMPERATURE not in self.data:
-                self.data[CONF_SLEEP_TEMPERATURE] = 16
-            if CONF_DOOR_TEMPERATURE not in self.data:
-                self.data[CONF_DOOR_TEMPERATURE] = 20
-        
+
             if CONF_WINDOW_TIMEOUT in self.data:
                 self.data[CONF_WINDOW_TIMEOUT] = (
                     int(
@@ -315,7 +293,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             else:
                 self.data[CONF_WINDOW_TIMEOUT] = 0
-        
+
             if CONF_WINDOW_TIMEOUT_AFTER in self.data:
                 self.data[CONF_WINDOW_TIMEOUT_AFTER] = (
                     int(
@@ -327,7 +305,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             else:
                 self.data[CONF_WINDOW_TIMEOUT_AFTER] = 0
-        
+
             if CONF_DOOR_TIMEOUT in self.data:
                 self.data[CONF_DOOR_TIMEOUT] = (
                     int(
@@ -339,7 +317,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             else:
                 self.data[CONF_DOOR_TIMEOUT] = 0
-        
+
             if CONF_DOOR_TIMEOUT_AFTER in self.data:
                 self.data[CONF_DOOR_TIMEOUT_AFTER] = (
                     int(
@@ -351,7 +329,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             else:
                 self.data[CONF_DOOR_TIMEOUT_AFTER] = 0
-        
+
             if "base" not in errors:
                 for trv in self.heater_entity_id:
                     _intigration = await get_trv_intigration(self, trv)
@@ -376,9 +354,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HEATER): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain="climate", multiple=True)
                     ),
-                    vol.Optional(CONF_MAIN_SWITCH): selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain="switch", multiple=False)
-                    ),
                     vol.Optional(CONF_COOLER): selector.EntitySelector(
                         selector.EntitySelectorConfig(domain="climate", multiple=False)
                     ),
@@ -388,6 +363,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             device_class="temperature",
                             multiple=False,
                         )
+                    ),
+                    vol.Optional(CONF_MAIN_SWITCH): selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain="switch", multiple=False)
                     ),
                     vol.Optional(CONF_HUMIDITY): selector.EntitySelector(
                         selector.EntitySelectorConfig(
@@ -403,9 +381,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             multiple=False,
                         )
                     ),
-                    vol.Optional(CONF_WEATHER): selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain="weather", multiple=False)
-                    ),
                     vol.Optional(CONF_SENSOR_WINDOW): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=[
@@ -417,8 +392,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             multiple=True,
                         )
                     ),
-                    vol.Optional(CONF_WINDOW_TIMEOUT): selector.DurationSelector(),
-                    vol.Optional(CONF_WINDOW_TIMEOUT_AFTER): selector.DurationSelector(),
                     vol.Optional(CONF_SENSOR_DOOR): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=[
@@ -430,34 +403,56 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             multiple=True,
                         )
                     ),
+                    vol.Optional(CONF_WEATHER): selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain="weather", multiple=False)
+                    ),
+                    vol.Optional(CONF_WINDOW_TIMEOUT): selector.DurationSelector(),
+                    vol.Optional(
+                        CONF_WINDOW_TIMEOUT_AFTER
+                    ): selector.DurationSelector(),
+
                     vol.Optional(CONF_DOOR_TIMEOUT): selector.DurationSelector(),
-                    vol.Optional(CONF_DOOR_TIMEOUT_AFTER): selector.DurationSelector(),
-                    vol.Optional(CONF_OFF_TEMPERATURE, default=user_input.get(CONF_OFF_TEMPERATURE, 20)): int,
-                    vol.Optional(CONF_TOLERANCE, default=user_input.get(CONF_TOLERANCE, 0.0)): vol.All(vol.Coerce(float), vol.Range(min=0)),
-                    vol.Optional(CONF_TARGET_TEMP_STEP, default=str(user_input.get(CONF_TARGET_TEMP_STEP, "0.0"))): TEMP_STEP_SELECTOR,
+                    vol.Optional(
+                        CONF_DOOR_TIMEOUT_AFTER
+                    ): selector.DurationSelector(),
                     vol.Optional(CONF_SLEEP_MODE, default=user_input.get(CONF_SLEEP_MODE, "")): selector.EntitySelector(
                         selector.EntitySelectorConfig(
-                            domain=["input_boolean", "switch", "binary_sensor", "group", "sensor"],
+                            domain=["group", "sensor", "switch", "binary_sensor"],
                             multiple=False,
                             allow_empty=True,
                         )
-                    ),
-                    vol.Optional(CONF_DOOR_OVERRIDE, default=user_input.get(CONF_DOOR_OVERRIDE, "")): selector.EntitySelector(
-                        selector.EntitySelectorConfig(
-                            domain=["input_boolean", "switch", "binary_sensor", "group", "sensor"],
-                            multiple=False,
-                            allow_empty=True,
-                        )
-                    ),
-                    vol.Optional(CONF_SLEEP_TEMPERATURE, default=16): int,
+                    ),  
                     vol.Optional(CONF_SLEEP_DELAY): selector.DurationSelector(),
                     vol.Optional(CONF_SLEEP_DELAY_AFTER): selector.DurationSelector(),
+                    vol.Optional(CONF_SLEEP_DELAY_AFTER): selector.DurationSelector(),
+                    vol.Optional(CONF_SLEEP_TEMPERATURE, default=16): int,
                     vol.Optional(CONF_DOOR_TEMPERATURE, default=20): int,
+                    vol.Optional(CONF_DOOR_OVERRIDE, default=user_input.get(CONF_DOOR_OVERRIDE, "")): selector.EntitySelector(
+                        selector.EntitySelectorConfig(
+                            domain=["group", "sensor", "switch", "binary_sensor"],
+                            multiple=False,
+                            allow_empty=True,
+                        )
+                    ),
+                    vol.Optional(
+                        CONF_OFF_TEMPERATURE,
+                        default=user_input.get(CONF_OFF_TEMPERATURE, 20),
+                    ): int,
+
+                    vol.Optional(
+                        CONF_TOLERANCE, default=user_input.get(CONF_TOLERANCE, 0.0)
+                    ): vol.All(vol.Coerce(float), vol.Range(min=0)),
+                    vol.Optional(
+                        CONF_TARGET_TEMP_STEP,
+                        default=str(user_input.get(CONF_TARGET_TEMP_STEP, "0.0")),
+                    ): TEMP_STEP_SELECTOR,
                 }
             ),
             errors=errors,
             last_step=False,
         )
+
+
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a option flow for a config entry."""
 
@@ -704,16 +699,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             )
         )
 
-        fields[
-            vol.Optional(
-                CONF_MAIN_SWITCH,
-                description={
-                    "suggested_value": self.config_entry.data.get(CONF_MAIN_SWITCH, "")
-                },
-            )
-        ] = selector.EntitySelector(
-            selector.EntitySelectorConfig(domain="switch", multiple=False)
-        )
         fields[
             vol.Optional(
                 CONF_HUMIDITY,
