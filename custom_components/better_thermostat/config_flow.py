@@ -165,27 +165,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.trv_bundle[self.i]["advanced"] = user_input
             self.trv_bundle[self.i]["adapter"] = None
-        
+    
             self.i += 1
             if len(self.trv_bundle) > self.i:
                 return await self.async_step_advanced(None, self.trv_bundle[self.i])
-        
+    
             _has_off_mode = True
             for trv in self.trv_bundle:
                 if HVACMode.OFF not in self.hass.states.get(
                     trv.get("trv")
                 ).attributes.get("hvac_modes"):
                     _has_off_mode = False
-        
+    
             if _has_off_mode is False:
                 return await self.async_step_confirm(None, "no_off_mode")
-        
+    
             # Speichern der Konfiguration von CONF_SLEEP_MODE und CONF_DOOR_OVERRIDE
-            self.data[CONF_SLEEP_MODE] = user_input.get(CONF_SLEEP_MODE)
-            self.data[CONF_DOOR_OVERRIDE] = user_input.get(CONF_DOOR_OVERRIDE)
+            self.data[CONF_SLEEP_MODE] = user_input.get(CONF_SLEEP_MODE, "")
+            self.data[CONF_DOOR_OVERRIDE] = user_input.get(CONF_DOOR_OVERRIDE, "")
             self.data[CONF_SLEEP_TEMPERATURE] = user_input.get(CONF_SLEEP_TEMPERATURE, 16)
             self.data[CONF_DOOR_TEMPERATURE] = user_input.get(CONF_DOOR_TEMPERATURE, 20)
-        
+    
             return await self.async_step_confirm()
 
         user_input = user_input or {}
