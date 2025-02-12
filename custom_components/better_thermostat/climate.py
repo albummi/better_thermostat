@@ -120,35 +120,11 @@ def async_set_temperature_service_validate(service_call: ServiceCall) -> Service
         if not isinstance(temp, (int, float)):
             raise ValueError(f"Invalid temperature value {temp}, must be numeric")
 
-    if ATTR_TARGET_TEMP_HIGH in service_call.data:
-        temp_high = service_call.data[ATTR_TARGET_TEMP_HIGH]
-        if not isinstance(temp_high, (int, float)):
-            raise ValueError(
-                f"Invalid target high temperature value {temp_high}, must be numeric"
-            )
-
-    if ATTR_TARGET_TEMP_LOW in service_call.data:
-        temp_low = service_call.data[ATTR_TARGET_TEMP_LOW]
-        if not isinstance(temp_low, (int, float)):
-            raise ValueError(
-                f"Invalid target low temperature value {temp_low}, must be numeric"
-            )
-
     return service_call
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Better Thermostat platform."""
-    platform = entity_platform.async_get_current_platform()
-
-    # Register service validators
-    platform.async_register_service_validator(
-        "set_temperature", async_set_temperature_service_validate
-    )
-
-
-async def async_setup_entry(hass, entry, async_add_devices):
-    """Setup sensor platform."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_devices):
+    """Set up Better Thermostat climate platform asynchronously."""
 
     async def async_service_handler(entity, call):
         """Handle the service calls."""
@@ -159,7 +135,38 @@ async def async_setup_entry(hass, entry, async_add_devices):
         elif call.service == SERVICE_RESET_HEATING_POWER:
             await entity.reset_heating_power()
 
+    # Erstellt die Thermostat-Entität
+    thermostat = BetterThermostat(
+        entry.data.get("name"),
+        entry.data.get("heater"),
+        entry.data.get("sensor"),
+        entry.data.get("humidity", None),
+        entry.data.get("sensor_window", None),
+        entry.data.get("window_timeout", None),
+        entry.data.get("window_timeout_after", None),
+        entry.data.get("sensor_door", None),
+        entry.data.get("door_timeout", None),
+        entry.data.get("door_timeout_after", None),
+        entry.data.get("weather", None),
+        entry.data.get("outdoor_sensor", None),
+        entry.data.get("off_temperature", None),
+        entry.data.get("tolerance", 0.0),
+        entry.data.get("target_temp_step", "0.0"),
+        entry.data.get("model", None),
+        entry.data.get("cooler", None),
+        hass.config.units.temperature_unit,
+        entry.entry_id,
+        device_class="better_thermostat",
+        state_class="better_thermostat_state",
+        main_switch=entry.data.get("main_switch", None),
+    )
+
+    async_add_devices([thermostat])
+
+    # Erst jetzt die Plattform abrufen!
     platform = entity_platform.async_get_current_platform()
+
+    # Services registrieren
     platform.async_register_entity_service(
         SERVICE_SET_TEMP_TARGET_TEMPERATURE,
         BETTERTHERMOSTAT_SET_TEMPERATURE_SCHEMA,
@@ -171,36 +178,6 @@ async def async_setup_entry(hass, entry, async_add_devices):
     platform.async_register_entity_service(
         SERVICE_RESET_HEATING_POWER, {}, "reset_heating_power"
     )
-
-    async_add_devices(
-        [
-            BetterThermostat(
-                entry.data.get(CONF_NAME),
-                entry.data.get(CONF_HEATER),
-                entry.data.get(CONF_SENSOR),
-                entry.data.get(CONF_HUMIDITY, None),
-                entry.data.get(CONF_SENSOR_WINDOW, None),
-                entry.data.get(CONF_WINDOW_TIMEOUT, None),
-                entry.data.get(CONF_WINDOW_TIMEOUT_AFTER, None),
-                entry.data.get(CONF_SENSOR_DOOR, None),
-                entry.data.get(CONF_DOOR_TIMEOUT, None),
-                entry.data.get(CONF_DOOR_TIMEOUT_AFTER, None),
-                entry.data.get(CONF_WEATHER, None),
-                entry.data.get(CONF_OUTDOOR_SENSOR, None),
-                entry.data.get(CONF_OFF_TEMPERATURE, None),
-                entry.data.get(CONF_TOLERANCE, 0.0),
-                entry.data.get(CONF_TARGET_TEMP_STEP, "0.0"),
-                entry.data.get(CONF_MODEL, None),
-                entry.data.get(CONF_COOLER, None),
-                hass.config.units.temperature_unit,
-                entry.entry_id,
-                device_class="better_thermostat",
-                state_class="better_thermostat_state",
-                main_switch=entry.data.get(CONF_MAIN_SWITCH, None)  # Hinzufügen des main_switch Parameters
-            )
-        ]
-    )
-
 
 class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
     """Representation of a Better Thermostat device."""
