@@ -84,18 +84,10 @@ from .utils.const import (
     CONF_WINDOW_TIMEOUT_AFTER,
     CONF_DOOR_TIMEOUT,
     CONF_DOOR_TIMEOUT_AFTER,
-    CONF_SLEEP_MODE,
-    CONF_SLEEP_TEMPERATURE,
-    CONF_SLEEP_DELAY,
-    CONF_SLEEP_DELAY_AFTER,
-    CONF_WINDOW_OVERRIDE,
-    CONF_DOOR_OVERRIDE,
-    CONF_DOOR_TEMPERATURE,
     SERVICE_RESET_HEATING_POWER,
     SERVICE_RESTORE_SAVED_TARGET_TEMPERATURE,
     SERVICE_SET_TEMP_TARGET_TEMPERATURE,
     SUPPORT_FLAGS,
-    CONF_MAIN_SWITCH,
     VERSION,
 )
 from .utils.controlling import control_queue, control_trv
@@ -120,11 +112,35 @@ def async_set_temperature_service_validate(service_call: ServiceCall) -> Service
         if not isinstance(temp, (int, float)):
             raise ValueError(f"Invalid temperature value {temp}, must be numeric")
 
+    if ATTR_TARGET_TEMP_HIGH in service_call.data:
+        temp_high = service_call.data[ATTR_TARGET_TEMP_HIGH]
+        if not isinstance(temp_high, (int, float)):
+            raise ValueError(
+                f"Invalid target high temperature value {temp_high}, must be numeric"
+            )
+
+    if ATTR_TARGET_TEMP_LOW in service_call.data:
+        temp_low = service_call.data[ATTR_TARGET_TEMP_LOW]
+        if not isinstance(temp_low, (int, float)):
+            raise ValueError(
+                f"Invalid target low temperature value {temp_low}, must be numeric"
+            )
+
     return service_call
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_devices):
-    """Set up Better Thermostat climate platform asynchronously."""
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the Better Thermostat platform."""
+    platform = entity_platform.async_get_current_platform()
+
+    # Register service validators
+    platform.async_register_service_validator(
+        "set_temperature", async_set_temperature_service_validate
+    )
+
+
+async def async_setup_entry(hass, entry, async_add_devices):
+    """Setup sensor platform."""
 
     async def async_service_handler(entity, call):
         """Handle the service calls."""
@@ -135,38 +151,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_d
         elif call.service == SERVICE_RESET_HEATING_POWER:
             await entity.reset_heating_power()
 
-    # Erstellt die Thermostat-Entität
-    thermostat = BetterThermostat(
-        entry.data.get("name"),
-        entry.data.get("heater"),
-        entry.data.get("sensor"),
-        entry.data.get("humidity", None),
-        entry.data.get("sensor_window", None),
-        entry.data.get("window_timeout", None),
-        entry.data.get("window_timeout_after", None),
-        entry.data.get("sensor_door", None),
-        entry.data.get("door_timeout", None),
-        entry.data.get("door_timeout_after", None),
-        entry.data.get("weather", None),
-        entry.data.get("outdoor_sensor", None),
-        entry.data.get("off_temperature", None),
-        entry.data.get("tolerance", 0.0),
-        entry.data.get("target_temp_step", "0.0"),
-        entry.data.get("model", None),
-        entry.data.get("cooler", None),
-        hass.config.units.temperature_unit,
-        entry.entry_id,
-        device_class="better_thermostat",
-        state_class="better_thermostat_state",
-        main_switch=entry.data.get("main_switch", None),
-    )
-
-    async_add_devices([thermostat])
-
-    # Erst jetzt die Plattform abrufen!
     platform = entity_platform.async_get_current_platform()
-
-    # Services registrieren
     platform.async_register_entity_service(
         SERVICE_SET_TEMP_TARGET_TEMPERATURE,
         BETTERTHERMOSTAT_SET_TEMPERATURE_SCHEMA,
@@ -178,6 +163,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_d
     platform.async_register_entity_service(
         SERVICE_RESET_HEATING_POWER, {}, "reset_heating_power"
     )
+
+    async_add_devices(
+        [
+            BetterThermostat(
+                entry.data.get(CONF_NAME),
+                entry.data.get(CONF_HEATER),
+                entry.data.get(CONF_SENSOR),
+                entry.data.get(CONF_HUMIDITY, None),
+                entry.data.get(CONF_SENSOR_WINDOW, None),
+                entry.data.get(CONF_WINDOW_TIMEOUT, None),
+                entry.data.get(CONF_WINDOW_TIMEOUT_AFTER, None),
+                entry.data.get(CONF_SENSOR_DOOR, None),
+                entry.data.get(CONF_DOOR_TIMEOUT, None),
+                entry.data.get(CONF_DOOR_TIMEOUT_AFTER, None),
+                entry.data.get(CONF_WEATHER, None),
+                entry.data.get(CONF_OUTDOOR_SENSOR, None),
+                entry.data.get(CONF_OFF_TEMPERATURE, None),
+                entry.data.get(CONF_TOLERANCE, 0.0),
+                entry.data.get(CONF_TARGET_TEMP_STEP, "0.0"),
+                entry.data.get(CONF_MODEL, None),
+                entry.data.get(CONF_COOLER, None),
+                hass.config.units.temperature_unit,
+                entry.entry_id,
+                device_class="better_thermostat",
+                state_class="better_thermostat_state",
+            )
+        ]
+    )
+
 
 class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
     """Representation of a Better Thermostat device."""
@@ -252,10 +266,9 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         unique_id,
         device_class,
         state_class,
-        main_switch,
     ):
         """Initialize the thermostat.
-    
+
         Parameters
         ----------
         TODO
@@ -301,7 +314,6 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         self.bt_hvac_mode = None
         self.closed_window_triggered = False
         self.closed_door_triggered = False
-        self.main_switch = main_switch
         self.call_for_heat = True
         self.ignore_states = False
         self.last_dampening_timestamp = None
@@ -340,19 +352,10 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         self.heating_power = 0.01
         self.last_heating_power_stats = []
         self.is_removed = False
-        self._extra_state_attributes = {
-            CONF_SLEEP_MODE: False,
-            CONF_SLEEP_TEMPERATURE: None,
-            CONF_SLEEP_DELAY: 0,
-            CONF_SLEEP_DELAY_AFTER: 0,
-            CONF_WINDOW_OVERRIDE: False,
-            CONF_DOOR_OVERRIDE: False,
-            CONF_DOOR_TEMPERATURE: None,
-        }
 
     async def async_added_to_hass(self):
         """Run when entity about to be added.
-    
+
         Returns
         -------
         None
@@ -361,16 +364,16 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
             return _LOGGER.error(
                 "You updated from version before 1.0.0-Beta36 of the Better Thermostat integration, you need to remove the BT devices (integration) and add it again."
             )
-    
+
         if self.cooler_entity_id is not None:
             self._hvac_list.remove(HVACMode.HEAT)
             self._hvac_list.append(HVACMode.HEAT_COOL)
             self.map_on_hvac_mode = HVACMode.HEAT_COOL
-    
+
         self.entity_ids = [
             entity for trv in self.all_trvs if (entity := trv["trv"]) is not None
         ]
-    
+
         for trv in self.all_trvs:
             _calibration = 1
             if trv["advanced"]["calibration"] == "local_calibration_based":
@@ -408,22 +411,22 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
                 "last_current_temperature": None,
                 "last_calibration": None,
             }
-    
+
         def on_remove():
             self.is_removed = True
-    
+
         self.async_on_remove(on_remove)
-    
+
         await super().async_added_to_hass()
-    
+
         _LOGGER.info(
             "better_thermostat %s: Waiting for entity to be ready...", self.device_name
         )
-    
+
         @callback
         def _async_startup(*_):
             """Init on startup.
-    
+
             Parameters
             ----------
             _ :
@@ -432,73 +435,12 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
             self.context = Context()
             loop = asyncio.get_event_loop()
             loop.create_task(self.startup())
-    
+
         if self.hass.state == CoreState.running:
             _async_startup()
         else:
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_startup)
-            
-        if self.main_switch:
-            async_track_state_change_event(
-                self.hass, [self.main_switch], self._async_switch_state_listener
-            )
-    
-        if self._extra_state_attributes[CONF_SLEEP_MODE]:
-            async_track_state_change_event(
-                self.hass, [self._extra_state_attributes[CONF_SLEEP_MODE]], self._async_sleep_mode_listener
-            )
-    
-        if self._extra_state_attributes[CONF_WINDOW_OVERRIDE]:
-            async_track_state_change_event(
-                self.hass, [self._extra_state_attributes[CONF_WINDOW_OVERRIDE]], self._async_window_override_listener
-            )
-    
-        if self._extra_state_attributes[CONF_DOOR_OVERRIDE]:
-            async_track_state_change_event(
-                self.hass, [self._extra_state_attributes[CONF_DOOR_OVERRIDE]], self._async_door_override_listener
-            )
 
-    @callback
-    async def _async_sleep_mode_listener(self, event):
-        """Handle state changes for the sleep mode."""
-        new_state = event.data.get("new_state")
-        if new_state.state == "on":
-            self._extra_state_attributes[CONF_SAVED_TEMPERATURE] = self.bt_target_temp
-            self.bt_target_temp = self._extra_state_attributes[CONF_SLEEP_TEMPERATURE]
-        else:
-            self.bt_target_temp = self._extra_state_attributes[CONF_SAVED_TEMPERATURE]
-        await self.async_update_ha_state()
-    
-    @callback
-    async def _async_window_override_listener(self, event):
-        """Handle state changes for the window override."""
-        new_state = event.data.get("new_state")
-        if new_state.state == "on":
-            self._extra_state_attributes[CONF_WINDOW_OVERRIDE] = True
-        else:
-            self._extra_state_attributes[CONF_WINDOW_OVERRIDE] = False
-        await self.async_update_ha_state()
-    
-    @callback
-    async def _async_door_override_listener(self, event):
-        """Handle state changes for the door override."""
-        new_state = event.data.get("new_state")
-        if new_state.state == "on":
-            self._extra_state_attributes[CONF_DOOR_OVERRIDE] = True
-        else:
-            self._extra_state_attributes[CONF_DOOR_OVERRIDE] = False
-        await self.async_update_ha_state()
-    
-    @callback
-    async def _async_switch_state_listener(self, event):
-        """Handle state changes for the main switch."""
-        new_state = event.data.get("new_state")
-        if new_state.state == "on":
-            self.bt_hvac_mode = HVACMode.HEAT
-        else:
-            self.bt_hvac_mode = HVACMode.OFF
-        await self.async_update_ha_state()   
-        
     async def _trigger_check_weather(self, event=None):
         _check = await check_all_entities(self)
         if _check is False:
@@ -565,10 +507,9 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
             return
         self.async_set_context(event.context)
         if (event.data.get("new_state")) is None:
-            return      
-        # Check window override
-        if not self._extra_state_attributes[CONF_WINDOW_OVERRIDE]:
-            self.hass.async_create_task(trigger_window_change(self, event))
+            return
+
+        self.hass.async_create_task(trigger_window_change(self, event))
 
     async def _trigger_door_change(self, event):
         _check = await check_all_entities(self)
@@ -577,11 +518,8 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         self.async_set_context(event.context)
         if (event.data.get("new_state")) is None:
             return
-        # Check door override
-        if not self._extra_state_attributes[CONF_DOOR_OVERRIDE]:
-            self.hass.async_create_task(trigger_door_change(self, event))
-        else:
-            self.bt_target_temp = self._extra_state_attributes[CONF_DOOR_TEMPERATURE]
+
+        self.hass.async_create_task(trigger_door_change(self, event))
 
     async def _tigger_cooler_change(self, event):
         _check = await check_all_entities(self)
