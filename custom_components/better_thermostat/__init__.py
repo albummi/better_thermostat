@@ -25,7 +25,7 @@ from .utils.const import (
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "better_thermostat"
-PLATFORMS = ["climate"]
+PLATFORMS = [Platform.CLIMATE]  # Korrekte Definition mit Platform-Enum
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 config_entry_update_listener_lock = Lock()
@@ -38,14 +38,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up entry."""
+    _LOGGER.info("Setting up Better Thermostat entry: %s", entry.entry_id)
+
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
-    
-    hass.async_create_task(hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
+
+    # Starte Plattform-Setups asynchron ohne den Event-Loop zu blockieren
+    hass.loop.call_soon(hass.async_create_task, hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
+
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
 
-    
 async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     async with config_entry_update_listener_lock:
@@ -62,72 +65,49 @@ async def async_reload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     await async_unload_entry(hass, config_entry)
     await async_setup_entry(hass, config_entry)
 
-async def async_migrate_entry(hass, config_entry: ConfigEntry):
+async def async_migrate_entry(hass, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
+
+    new = {**config_entry.data}
+
     if config_entry.version == 1:
-        new = {**config_entry.data}
-        for trv in new[CONF_HEATER]:
-            trv["advanced"].update({CalibrationMode.AGGRESIVE_CALIBRATION: False})
+        for trv in new.get(CONF_HEATER, []):
+            trv.setdefault("advanced", {}).update({CalibrationMode.AGGRESIVE_CALIBRATION: False})
         config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=new)
 
     if config_entry.version == 2:
-        new = {**config_entry.data}
         new[CONF_WINDOW_TIMEOUT] = 0
         config_entry.version = 3
-        hass.config_entries.async_update_entry(config_entry, data=new)
-        
-    if config_entry.version == 2:
-        new = {**config_entry.data}
-        new[CONF_DOOR_TIMEOUT] = 0
-        config_entry.version = 3
-        hass.config_entries.async_update_entry(config_entry, data=new)
-                                             
+
     if config_entry.version == 3:
-        new = {**config_entry.data}
-        for trv in new[CONF_HEATER]:
-            if (
-                CalibrationMode.AGGRESIVE_CALIBRATION in trv["advanced"]
-                and trv["advanced"][CalibrationMode.AGGRESIVE_CALIBRATION]
-            ):
-                trv["advanced"].update(
-                    {CONF_CALIBRATION_MODE: CalibrationMode.AGGRESIVE_CALIBRATION}
-                )
+        for trv in new.get(CONF_HEATER, []):
+            if trv.get("advanced", {}).get(CalibrationMode.AGGRESIVE_CALIBRATION, False):
+                trv["advanced"][CONF_CALIBRATION_MODE] = CalibrationMode.AGGRESIVE_CALIBRATION
             else:
-                trv["advanced"].update({CONF_CALIBRATION_MODE: CalibrationMode.DEFAULT})
+                trv["advanced"][CONF_CALIBRATION_MODE] = CalibrationMode.DEFAULT
         config_entry.version = 4
-        hass.config_entries.async_update_entry(config_entry, data=new)
 
     if config_entry.version == 4:
-        new = {**config_entry.data}
-        for trv in new[CONF_HEATER]:
-            trv["advanced"].update({CONF_NO_SYSTEM_MODE_OFF: False})
+        for trv in new.get(CONF_HEATER, []):
+            trv.setdefault("advanced", {}).update({CONF_NO_SYSTEM_MODE_OFF: False})
         config_entry.version = 5
-        hass.config_entries.async_update_entry(config_entry, data=new)
 
     if config_entry.version == 5:
-        new = {**config_entry.data}
         new[CONF_WINDOW_TIMEOUT_AFTER] = new[CONF_WINDOW_TIMEOUT]
+        new[CONF_DOOR_TIMEOUT_AFTER] = new.get(CONF_DOOR_TIMEOUT, 0)
         config_entry.version = 6
-        hass.config_entries.async_update_entry(config_entry, data=new)
 
-    if config_entry.version == 5:
-        new = {**config_entry.data}
-        new[CONF_DOOR_TIMEOUT_AFTER] = new[CONF_DOOR_TIMEOUT]
-        config_entry.version = 6
-        hass.config_entries.async_update_entry(config_entry, data=new)
-        
     if config_entry.version == 6:
-        # Add sleep mode configurations
-        new = {**config_entry.data}
-        new[CONF_SLEEP_MODE] = False
-        new[CONF_SLEEP_TEMPERATURE] = None
-        new[CONF_SLEEP_DELAY] = 0
-        new[CONF_SLEEP_DELAY_AFTER] = 0
+        new.update({
+            CONF_SLEEP_MODE: False,
+            CONF_SLEEP_TEMPERATURE: None,
+            CONF_SLEEP_DELAY: 0,
+            CONF_SLEEP_DELAY_AFTER: 0,
+        })
         config_entry.version = 7
-        hass.config_entries.async_update_entry(config_entry, data=new)
-        
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
 
+    hass.config_entries.async_update_entry(config_entry, data=new)
+
+    _LOGGER.info("Migration to version %s successful", config_entry.version)
     return True
