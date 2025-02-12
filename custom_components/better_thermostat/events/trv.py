@@ -414,3 +414,19 @@ async def check_target_temperature(self, heater_entity_id=None):
 
     _real_trv["target_temp_received"] = True
     return True
+
+async def trigger_trv_change(self, entity_id=None):
+    """Trigger TRV change.
+
+    Parameters
+    ----------
+    self :
+        instance of better_thermostat
+
+    Returns
+    -------
+    None
+    """
+    _LOGGER.debug(f"better_thermostat {self.device_name}: TRV change triggered for {entity_id}")
+    # Implement the logic for triggering TRV change
+    pass
