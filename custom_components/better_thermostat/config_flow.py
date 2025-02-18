@@ -38,14 +38,6 @@ from .utils.const import (
     CONF_DOOR_TIMEOUT_AFTER,
     CONF_CALIBRATION_MODE,
     CONF_TOLERANCE,
-    CONF_MAIN_SWITCH,
-    CONF_SLEEP_MODE,
-    CONF_SLEEP_TEMPERATURE,
-    CONF_SLEEP_DELAY,
-    CONF_SLEEP_DELAY_AFTER,
-    CONF_WINDOW_OVERRIDE,
-    CONF_DOOR_OVERRIDE,
-    CONF_DOOR_TEMPERATURE,
     CONF_TARGET_TEMP_STEP,
     CalibrationMode,
     CalibrationType,
@@ -372,9 +364,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                             multiple=False,
                         )
                     ),
-                    vol.Optional(CONF_MAIN_SWITCH): selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain="switch", multiple=False)
-                    ),
                     vol.Optional(CONF_HUMIDITY): selector.EntitySelector(
                         selector.EntitySelectorConfig(
                             domain=["sensor", "number", "input_number"],
@@ -423,25 +412,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_DOOR_TIMEOUT_AFTER
                     ): selector.DurationSelector(),
-                    vol.Optional(CONF_SLEEP_MODE, default=user_input.get(CONF_SLEEP_MODE, "")): selector.EntitySelector(
-                        selector.EntitySelectorConfig(
-                            domain=["group", "sensor", "switch", "binary_sensor"],
-                            multiple=False,
-                            allow_empty=True,
-                        )
-                    ),  
-                    vol.Optional(CONF_SLEEP_DELAY): selector.DurationSelector(),
-                    vol.Optional(CONF_SLEEP_DELAY_AFTER): selector.DurationSelector(),
-                    vol.Optional(CONF_SLEEP_DELAY_AFTER): selector.DurationSelector(),
-                    vol.Optional(CONF_SLEEP_TEMPERATURE, default=16): int,
-                    vol.Optional(CONF_DOOR_TEMPERATURE, default=20): int,
-                    vol.Optional(CONF_DOOR_OVERRIDE, default=user_input.get(CONF_DOOR_OVERRIDE, "")): selector.EntitySelector(
-                        selector.EntitySelectorConfig(
-                            domain=["group", "sensor", "switch", "binary_sensor"],
-                            multiple=False,
-                            allow_empty=True,
-                        )
-                    ),
+                    
                     vol.Optional(
                         CONF_OFF_TEMPERATURE,
                         default=user_input.get(CONF_OFF_TEMPERATURE, 20),

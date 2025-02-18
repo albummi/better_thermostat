@@ -22,15 +22,7 @@ from custom_components.better_thermostat.events.trv import (
 
 from custom_components.better_thermostat.utils.helpers import convert_to_float
 
-from custom_components.better_thermostat.utils.const import (
-    CalibrationMode,
-    CONF_SLEEP_MODE,
-    CONF_SLEEP_TEMPERATURE,
-    CONF_SLEEP_DELAY,
-    CONF_SLEEP_DELAY_AFTER,
-    CONF_DOOR_OVERRIDE,
-    CONF_DOOR_TEMPERATURE
-)
+from custom_components.better_thermostat.utils.const import CalibrationMode
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -131,7 +123,7 @@ async def control_trv(self, heater_entity_id=None):
             "controlling()",
         )
 
-        _remapped_states = await convert_outbound_states(
+        _remapped_states = convert_outbound_states(
             self, heater_entity_id, self.bt_hvac_mode
         )
         if not isinstance(_remapped_states, dict):

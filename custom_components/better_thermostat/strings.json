@@ -18,13 +18,7 @@
                     "door_off_delay": "Delay before the thermostat should turn off when the door is opened",
                     "door_off_delay_after": "Delay before the thermostat should turn on when the door is closed",
                     "outdoor_sensor": "Outdoor temperature sensor",
-                    "weather": "Weather entity to get the outdoor temperature",
-                    "sleep_mode": "Enable Sleep Mode",
-                    "sleep_temperature": "Sleep Mode Temperature",
-                    "sleep_delay": "Delay before activating Sleep Mode",
-                    "sleep_delay_after": "Delay before deactivating Sleep Mode",
-                    "door_override": "Enable Door Override",
-                    "door_temperature": "Temperature when Door is Open"
+                    "weather": "Weather entity to get the outdoor temperature"
                 }
             },
             "advanced": {
@@ -40,9 +34,9 @@
                     "no_off_system_mode": "If your TRV doesn't support the 'off' mode, enable this to use target temperature 5°C instead"
                 },
                 "data_description": {
-                    "protect_overheating": "Some TRVs don't close the valve completely when the temperature is reached. Or the radiator has a lot of rest heat. This can cause overheating. This option protects against such cases.",
-                    "calibration_mode": "How the calibration is calculated\n***Normal***: In this mode, the TRV internal temperature sensor is fixed by the external temperature sensor.\n***Aggressive***: In this mode, the TRV internal temperature sensor is fixed by the external temperature sensor and an additional offset.",
-                    "calibration": "How the calibration is applied on the TRV\n***Target Temperature Based***: Apply the calibration to the target temperature.\n***Offset Based***: Apply the calibration as an offset to the TRV internal temperature sensor."
+                    "protect_overheating": "Some TRVs don't close the valve completely when the temperature is reached. Or the radiator has a lot of rest heat. This can cause overheating. This option can prevent this.",
+                    "calibration_mode": "How the calibration is calculated\n***Normal***: In this mode, the TRV internal temperature sensor is fixed by the external temperature sensor.\n***Aggressive***: In this mode, the TRV internal temperature sensor is fixed by the external temperature sensor but set much lower/higher to get a quicker boost.\n***AI Time Based***: In this mode, the TRV internal temperature sensor is fixed by the external temperature sensor, but the value is calculated by a custom algorithm to improve the TRV internal algorithm.",
+                    "calibration": "How the calibration is applied on the TRV\n***Target Temperature Based***: Apply the calibration to the target temperature.\n***Offset Based***: Apply the calibration to the temperature offset."
                 }
             },
             "confirm": {
@@ -79,13 +73,7 @@
                     "door_off_delay": "Delay before the thermostat should turn off when the door is opened",
                     "door_off_delay_after": "Delay before the thermostat should turn on when the door is closed",
                     "outdoor_sensor": "Outdoor temperature sensor",
-                    "weather": "Weather entity to get the outdoor temperature",
-                    "sleep_mode": "Enable Sleep Mode",
-                    "sleep_temperature": "Sleep Mode Temperature",
-                    "sleep_delay": "Delay before activating Sleep Mode",
-                    "sleep_delay_after": "Delay before deactivating Sleep Mode",
-                    "door_override": "Enable Door Override",
-                    "door_temperature": "Temperature when Door is Open"
+                    "weather": "Weather entity to get the outdoor temperature"
                 }
             }
         }

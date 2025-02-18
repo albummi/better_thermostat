@@ -59,7 +59,6 @@ async def trigger_door_change(self, event) -> None:
         return
     await self.door_queue_task.put(new_door_open)
 
-
 async def door_queue(self):
     try:
         while True:
@@ -82,11 +81,6 @@ async def door_queue(self):
                     if current_door_state == door_event_to_process:
                         self.door_open = door_event_to_process
                         self.async_write_ha_state()
-                        if self.door_override and self.door_open:
-                            self.target_temperature = self.door_temperature
-                            _LOGGER.debug(
-                                f"better_thermostat {self.device_name}: Door override active, setting temperature to {self.door_temperature}"
-                            )
                         if not self.control_queue_task.empty():
                             empty_queue(self.control_queue_task)
                         await self.control_queue_task.put(self)

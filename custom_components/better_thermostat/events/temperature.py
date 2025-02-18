@@ -1,14 +1,6 @@
 import logging
 
-from custom_components.better_thermostat.utils.const import (
-    CONF_HOMEMATICIP,
-    CONF_SLEEP_MODE,
-    CONF_SLEEP_TEMPERATURE,
-    CONF_SLEEP_DELAY,
-    CONF_SLEEP_DELAY_AFTER,
-    CONF_DOOR_OVERRIDE,
-    CONF_DOOR_TEMPERATURE
-)
+from custom_components.better_thermostat.utils.const import CONF_HOMEMATICIP
 from ..utils.helpers import convert_to_float
 from datetime import datetime
 from homeassistant.helpers import issue_registry as ir
@@ -85,25 +77,5 @@ async def trigger_temperature_change(self, event):
         )
         self.cur_temp = _incoming_temperature
         self.last_external_sensor_change = datetime.now()
-        self.async_write_ha_state()
-        await self.control_queue_task.put(self)
-        
-        # Handle sleep mode
-        if hasattr(self, 'sleep_mode') and self.sleep_mode and hasattr(self, 'door_override') and self.door_override:
-            if hasattr(self, 'door_open') and self.door_open:
-                self.target_temperature = self.door_temperature
-                _LOGGER.debug(
-                    f"better_thermostat {self.device_name}: Door is open, setting temperature to {self.door_temperature} due to door override"
-                )
-            elif hasattr(self, 'sleep_mode') and self.sleep_mode:
-                self.target_temperature = self.sleep_temperature
-                _LOGGER.debug(
-                    f"better_thermostat {self.device_name}: Sleep mode active, setting temperature to {self.sleep_temperature}"
-                )
-            else:
-                self.target_temperature = self.default_target_temperature
-                _LOGGER.debug(
-                    f"better_thermostat {self.device_name}: Setting temperature to default target temperature {self.default_target_temperature}"
-                )
         self.async_write_ha_state()
         await self.control_queue_task.put(self)
