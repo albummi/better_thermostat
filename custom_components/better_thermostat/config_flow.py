@@ -36,10 +36,10 @@ from .utils.const import (
     CONF_CALIBRATION_MODE,
     CONF_TOLERANCE,
     CONF_TARGET_TEMP_STEP,
-    CONF_SLEEP_MODE,
-    CONF_SLEEP_TEMPERATURE,
-    CONF_POST_SLEEP_MODE_ACTION,
-    CONF_POST_SLEEP_TEMPERATURE,
+    CONF_SLEEP_MODE,  # Hinzugefügt
+    CONF_SLEEP_TEMPERATURE,  # Hinzugefügt
+    CONF_POST_SLEEP_MODE_ACTION,  # Hinzugefügt
+    CONF_POST_SLEEP_TEMPERATURE,  # Hinzugefügt
     CalibrationMode,
     CalibrationType,
 )
@@ -408,14 +408,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Optional(
                         CONF_WINDOW_TIMEOUT_AFTER
                     ): selector.DurationSelector(),
+        
                     vol.Optional(CONF_DOOR_TIMEOUT): selector.DurationSelector(),
                     vol.Optional(
                         CONF_DOOR_TIMEOUT_AFTER
                     ): selector.DurationSelector(),
+                    
                     vol.Optional(
                         CONF_OFF_TEMPERATURE,
                         default=user_input.get(CONF_OFF_TEMPERATURE, 20),
                     ): int,
+        
                     vol.Optional(
                         CONF_TOLERANCE, default=user_input.get(CONF_TOLERANCE, 0.0)
                     ): vol.All(vol.Coerce(float), vol.Range(min=0)),
@@ -425,22 +428,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): TEMP_STEP_SELECTOR,
                     vol.Optional(
                         CONF_SLEEP_MODE,
-                        default=user_input.get(CONF_SLEEP_MODE, None)
+                        default=user_input.get(CONF_SLEEP_MODE, ""),
                     ): selector.EntitySelector(
-                        selector.EntitySelectorConfig(domain=["switch", "sensor"], multiple=False)
+                        selector.EntitySelectorConfig(
+                            domain=["input_boolean", "switch", "binary_sensor"],
+                            multiple=False,
+                        )
                     ),
                     vol.Optional(
                         CONF_SLEEP_TEMPERATURE,
-                        default=user_input.get(CONF_SLEEP_TEMPERATURE, 18),
-                    ): int,
+                        default=user_input.get(CONF_SLEEP_TEMPERATURE, 16),
+                    ): vol.Coerce(float),
                     vol.Optional(
                         CONF_POST_SLEEP_MODE_ACTION,
                         default=user_input.get(CONF_POST_SLEEP_MODE_ACTION, "previous"),
-                    ): str,
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=[
+                                {"value": "previous", "label": "Previous Temperature"},
+                                {"value": "set", "label": "Set Temperature"},
+                                {"value": "nothing", "label": "Do Nothing"},
+                            ],
+                            mode=selector.SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
                     vol.Optional(
                         CONF_POST_SLEEP_TEMPERATURE,
                         default=user_input.get(CONF_POST_SLEEP_TEMPERATURE, 20),
-                    ): int,
+                    ): vol.Coerce(float),
                 }
             ),
             errors=errors,
@@ -569,6 +584,57 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 default=_trv_config["advanced"].get(CONF_HEAT_AUTO_SWAPPED, has_auto),
             )
         ] = bool
+        fields[
+            vol.Optional(
+                CONF_SLEEP_MODE,
+                description={
+                    "suggested_value": self.config_entry.data.get(CONF_SLEEP_MODE, "")
+                },
+            )
+        ] = selector.EntitySelector(
+            selector.EntitySelectorConfig(
+                domain=["input_boolean", "switch", "binary_sensor"],
+                multiple=False,
+            )
+        )
+        
+        fields[
+            vol.Optional(
+                CONF_SLEEP_TEMPERATURE,
+                description={
+                    "suggested_value": self.config_entry.data.get(CONF_SLEEP_TEMPERATURE, 16)
+                },
+            )
+        ] = vol.Coerce(float)
+        
+        fields[
+            vol.Optional(
+                CONF_POST_SLEEP_MODE_ACTION,
+                description={
+                    "suggested_value": self.config_entry.data.get(
+                        CONF_POST_SLEEP_MODE_ACTION, "previous"
+                    )
+                },
+            )
+        ] = selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[
+                    {"value": "previous", "label": "Previous Temperature"},
+                    {"value": "set", "label": "Set Temperature"},
+                    {"value": "nothing", "label": "Do Nothing"},
+                ],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )
+        )
+        
+        fields[
+            vol.Optional(
+                CONF_POST_SLEEP_TEMPERATURE,
+                description={
+                    "suggested_value": self.config_entry.data.get(CONF_POST_SLEEP_TEMPERATURE, 20)
+                },
+            )
+        ] = vol.Coerce(float)
 
         if _info.get("support_valve", False):
             fields[
@@ -585,11 +651,4 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             )
         ] = bool
 
-        fields[
-            vol.Optional(
-                CONF_SLEEP_MODE,
-                default=user_input.get(CONF_SLEEP_MODE, None)
-            ): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain=["switch", "sensor"], multiple=False)
-            )
-        ]
+
