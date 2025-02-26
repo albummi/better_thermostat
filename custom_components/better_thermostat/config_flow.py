@@ -579,5 +579,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         fields[
             vol.Optional(
                 CONF_CHILD_LOCK,
-                default=_trv_config["advanced"].get
-            ) = bool
+                default=_trv_config["advanced"].get(CONF_CHILD_LOCK, False)
+            )
+        ] = bool
