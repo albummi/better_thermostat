@@ -425,8 +425,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ): TEMP_STEP_SELECTOR,
                     vol.Optional(
                         CONF_SLEEP_MODE,
-                        default=user_input.get(CONF_SLEEP_MODE, False),
-                    ): bool,
+                        default=user_input.get(CONF_SLEEP_MODE, None)
+                    ): selector.EntitySelector(
+                        selector.EntitySelectorConfig(domain=["switch", "sensor"], multiple=False)
+                    ),
                     vol.Optional(
                         CONF_SLEEP_TEMPERATURE,
                         default=user_input.get(CONF_SLEEP_TEMPERATURE, 18),
