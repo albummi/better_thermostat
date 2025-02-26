@@ -582,3 +582,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 default=_trv_config["advanced"].get(CONF_CHILD_LOCK, False)
             )
         ] = bool
+
+        fields[
+            vol.Optional(
+                CONF_SLEEP_MODE,
+                default=user_input.get(CONF_SLEEP_MODE, None)
+            ): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain=["switch", "sensor"], multiple=False)
+            )
+        ]
