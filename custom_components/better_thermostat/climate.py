@@ -145,7 +145,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Setup sensor platform."""
-
+# In der Funktion async_setup_entry hinzufügen:
+    _LOGGER.debug("CONF_POST_SLEEP_MODE_ACTION: %s", entry.data.get(CONF_POST_SLEEP_MODE_ACTION))
+    _LOGGER.debug("CONF_POST_SLEEP_TEMPERATURE: %s", entry.data.get(CONF_POST_SLEEP_TEMPERATURE))
     async def async_service_handler(entity, call):
         """Handle the service calls."""
         if call.service == SERVICE_RESTORE_SAVED_TARGET_TEMPERATURE:
