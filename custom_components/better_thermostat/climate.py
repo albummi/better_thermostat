@@ -67,7 +67,6 @@ from .utils.const import (
     ATTR_STATE_SAVED_TEMPERATURE,
     ATTR_STATE_WINDOW_OPEN,
     ATTR_STATE_DOOR_OPEN,
-    ATTR_STATE_SLEEP_MODE,  # Hinzugefügt
     BETTERTHERMOSTAT_SET_TEMPERATURE_SCHEMA,
     CONF_COOLER,
     CONF_HEATER,
@@ -85,14 +84,12 @@ from .utils.const import (
     CONF_WINDOW_TIMEOUT_AFTER,
     CONF_DOOR_TIMEOUT,
     CONF_DOOR_TIMEOUT_AFTER,
-    CONF_SLEEP_MODE,  # Hinzugefügt
-    CONF_SLEEP_TEMPERATURE,  # Hinzugefügt
-    CONF_POST_SLEEP_MODE_ACTION,  # Hinzugefügt
-    CONF_POST_SLEEP_TEMPERATURE,  # Hinzugefügt
+    SERVICE_RESET_HEATING_POWER,
+    SERVICE_RESTORE_SAVED_TARGET_TEMPERATURE,
+    SERVICE_SET_TEMP_TARGET_TEMPERATURE,
     SUPPORT_FLAGS,
     VERSION,
 )
-
 from .utils.controlling import control_queue, control_trv
 from .utils.helpers import convert_to_float, find_battery_entity, get_hvac_bt_mode
 from .utils.watcher import check_all_entities
@@ -144,9 +141,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Setup sensor platform."""
-# In der Funktion async_setup_entry hinzufügen:
-    _LOGGER.debug("CONF_POST_SLEEP_MODE_ACTION: %s", entry.data.get(CONF_POST_SLEEP_MODE_ACTION))
-    _LOGGER.debug("CONF_POST_SLEEP_TEMPERATURE: %s", entry.data.get(CONF_POST_SLEEP_TEMPERATURE))
+
     async def async_service_handler(entity, call):
         """Handle the service calls."""
         if call.service == SERVICE_RESTORE_SAVED_TARGET_TEMPERATURE:
@@ -193,13 +188,10 @@ async def async_setup_entry(hass, entry, async_add_devices):
                 entry.entry_id,
                 device_class="better_thermostat",
                 state_class="better_thermostat_state",
-                entry.data.get(CONF_SLEEP_MODE, None),  # Hinzugefügt
-                entry.data.get(CONF_SLEEP_TEMPERATURE, 18,0),  # Hinzugefügt
-                entry.data.get(CONF_POST_SLEEP_MODE_ACTION, "previous"),  # Hinzugefügt
-                entry.data.get(CONF_POST_SLEEP_TEMPERATURE, 20.0),  # Hinzugefügt
             )
         ]
     )
+
 
 class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
     """Representation of a Better Thermostat device."""
@@ -235,27 +227,7 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
             self._saved_temperature = None
             self.async_write_ha_state()
             await self.control_queue_task.put(self)
-            
-    async def set_sleep_mode(self):
-        """Set the thermostat to sleep mode."""
-        if self.bt_hvac_mode != HVACMode.OFF:
-            self._saved_hvac_mode = self.bt_hvac_mode
-            self._saved_temperature = self.bt_target_temp
-            self.bt_target_temp = self.sleep_temperature
-            self.bt_hvac_mode = HVACMode.HEAT
-            self.async_write_ha_state()
-            await self.control_queue_task.put(self)
 
-    async def restore_post_sleep_mode(self):
-        """Restore the thermostat from sleep mode"""
-        if self._saved_hvac_mode is not None:
-            self.bt_hvac_mode = self._saved_hvac_mode
-            self.bt_target_temp = self.post_sleep_temperature
-            self._saved_hvac_mode = None
-            self._saved_temperature = None
-            self.async_write_ha_state()
-            await self.control_queue_task.put(self)
-            
     async def reset_heating_power(self):
         """Reset heating power to default value."""
         self.heating_power = 0.01
@@ -294,11 +266,7 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         unique_id,
         device_class,
         state_class,
-        sleep_mode,  # Hinzugefügt
-        sleep_temperature,  # Hinzugefügt
-        post_sleep_mode_action,  # Hinzugefügt
-        post_sleep_temperature,  # Hinzugefügt
-        ):
+    ):
         """Initialize the thermostat.
 
         Parameters
@@ -384,14 +352,6 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         self.heating_power = 0.01
         self.last_heating_power_stats = []
         self.is_removed = False
-        self.sleep_mode = sleep_mode or None  # Hinzugefügt
-        self.sleep_temperature = float(sleep_temperature) or 18.0  # Hinzugefügt
-        self.post_sleep_mode_action = post_sleep_mode_action or "previous"  # Hinzugefügt
-        self.post_sleep_temperature = float(post_sleep_temperature) or 20.0  # Hinzugefügt
-        self._saved_hvac_mode = None
-        self._saved_temperature = None
-        self._saved_hvac_mode = None
-        self._saved_temperature = None
 
     async def async_added_to_hass(self):
         """Run when entity about to be added.
