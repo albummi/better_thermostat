@@ -463,7 +463,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        return await self.async_step_user()
+        return await self.async_step_init()
 
     async def async_step_advanced(
         self, user_input=None, _trv_config=None, _update_config=None
