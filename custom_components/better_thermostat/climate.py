@@ -192,8 +192,8 @@ async def async_setup_entry(hass, entry, async_add_devices):
                 entry.entry_id,
                 entry.data.get(CONF_SLEEP_MODE, None),
                 entry.data.get(CONF_SLEEP_TEMPERATURE, None),
-                entry.data.get(CONF_POST_SLEEP_MODE_ACTION, None),
-                entry.data.get(CONF_POST_SLEEP_TEMPERATURE, None)
+                entry.data.get(CONF_POST_SLEEP_MODE_ACTION, "previous"),
+                entry.data.get(CONF_POST_SLEEP_TEMPERATURE, 20.0)
             )
         ]
     )
