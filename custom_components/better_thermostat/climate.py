@@ -190,12 +190,12 @@ async def async_setup_entry(hass, entry, async_add_devices):
                 entry.data.get(CONF_TARGET_TEMP_STEP, "0.0"),
                 entry.data.get(CONF_MODEL, None),
                 entry.data.get(CONF_COOLER, None),
+                hass.config.units.temperature_unit,
+                entry.entry_id,
                 entry.data.get(CONF_SLEEP_MODE, None),
                 entry.data.get(CONF_SLEEP_TEMPERATURE, None),
                 entry.data.get(CONF_POST_SLEEP_MODE_ACTION, "previous"),
                 entry.data.get(CONF_POST_SLEEP_TEMPERATURE, 20.0)
-                hass.config.units.temperature_unit,
-                entry.entry_id,
             )
         ]
     )
