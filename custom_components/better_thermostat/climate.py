@@ -193,13 +193,10 @@ async def async_setup_entry(hass, entry, async_add_devices):
                 entry.data.get(CONF_SLEEP_MODE, None),
                 entry.data.get(CONF_SLEEP_TEMPERATURE, None),
                 entry.data.get(CONF_POST_SLEEP_MODE_ACTION, None),
-                entry.data.get(CONF_POST_SLEEP_TEMPERATURE, None),
-                device_class="better_thermostat",
-                state_class="better_thermostat_state",
+                entry.data.get(CONF_POST_SLEEP_TEMPERATURE, None)
             )
         ]
     )
-
 
 class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
     """Representation of a Better Thermostat device."""
