@@ -67,6 +67,7 @@ from .utils.const import (
     ATTR_STATE_SAVED_TEMPERATURE,
     ATTR_STATE_WINDOW_OPEN,
     ATTR_STATE_DOOR_OPEN,
+    ATTR_STATE_SLEEP_MODE,  # Hinzugefügt
     BETTERTHERMOSTAT_SET_TEMPERATURE_SCHEMA,
     CONF_COOLER,
     CONF_HEATER,
@@ -84,16 +85,14 @@ from .utils.const import (
     CONF_WINDOW_TIMEOUT_AFTER,
     CONF_DOOR_TIMEOUT,
     CONF_DOOR_TIMEOUT_AFTER,
-    SERVICE_RESET_HEATING_POWER,
-    SERVICE_RESTORE_SAVED_TARGET_TEMPERATURE,
-    SERVICE_SET_TEMP_TARGET_TEMPERATURE,
+    CONF_SLEEP_MODE,  # Hinzugefügt
+    CONF_SLEEP_TEMPERATURE,  # Hinzugefügt
+    CONF_POST_SLEEP_MODE_ACTION,  # Hinzugefügt
+    CONF_POST_SLEEP_TEMPERATURE,  # Hinzugefügt
     SUPPORT_FLAGS,
     VERSION,
-    CONF_SLEEP_MODE,
-    CONF_SLEEP_TEMPERATURE,
-    CONF_POST_SLEEP_MODE_ACTION,
-    CONF_POST_SLEEP_TEMPERATURE,
 )
+
 from .utils.controlling import control_queue, control_trv
 from .utils.helpers import convert_to_float, find_battery_entity, get_hvac_bt_mode
 from .utils.watcher import check_all_entities
@@ -192,10 +191,12 @@ async def async_setup_entry(hass, entry, async_add_devices):
                 entry.data.get(CONF_COOLER, None),
                 hass.config.units.temperature_unit,
                 entry.entry_id,
-                entry.data.get(CONF_SLEEP_MODE, None),
-                entry.data.get(CONF_SLEEP_TEMPERATURE, None),
-                entry.data.get(CONF_POST_SLEEP_MODE_ACTION, "previous"),
-                entry.data.get(CONF_POST_SLEEP_TEMPERATURE, 20.0),
+                device_class="better_thermostat",
+                state_class="better_thermostat_state",
+                entry.data.get(CONF_SLEEP_MODE, None),  # Hinzugefügt
+                entry.data.get(CONF_SLEEP_TEMPERATURE, None),  # Hinzugefügt
+                entry.data.get(CONF_POST_SLEEP_MODE_ACTION, "previous"),  # Hinzugefügt
+                entry.data.get(CONF_POST_SLEEP_TEMPERATURE, 20.0),  # Hinzugefügt
             )
         ]
     )
@@ -293,10 +294,10 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         unique_id,
         device_class,
         state_class,
-        sleep_mode,
-        sleep_temperature,
-        post_sleep_mode_action,
-        post_sleep_temperature,
+        sleep_mode,  # Hinzugefügt
+        sleep_temperature,  # Hinzugefügt
+        post_sleep_mode_action,  # Hinzugefügt
+        post_sleep_temperature,  # Hinzugefügt
         ):
         """Initialize the thermostat.
 
@@ -383,10 +384,10 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         self.heating_power = 0.01
         self.last_heating_power_stats = []
         self.is_removed = False
-        self.sleep_mode = sleep_mode if sleep_mode is not None else False
-        self.sleep_temperature = sleep_temperature if sleep_temperature is not None else 20.0  # Default sleep temperature
-        self.post_sleep_mode_action = post_sleep_mode_action if post_sleep_mode_action is not None else "previous"
-        self.post_sleep_temperature = post_sleep_temperature if post_sleep_temperature is not None else 20.0  # Default post sleep temperature
+        self.sleep_mode = sleep_mode or None  # Hinzugefügt
+        self.sleep_temperature = float(sleep_temperature) or 18.0  # Hinzugefügt
+        self.post_sleep_mode_action = post_sleep_mode_action or "previous"  # Hinzugefügt
+        self.post_sleep_temperature = float(post_sleep_temperature) or 20.0  # Hinzugefügt
         self._saved_hvac_mode = None
         self._saved_temperature = None
         self._saved_hvac_mode = None
