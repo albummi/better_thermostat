@@ -54,10 +54,6 @@ CONF_INTEGRATION = "integration"
 CONF_NO_SYSTEM_MODE_OFF = "no_off_system_mode"
 CONF_TOLERANCE = "tolerance"
 CONF_TARGET_TEMP_STEP = "target_temp_step"
-CONF_SLEEP_MODE = "sleep_mode"
-CONF_SLEEP_TEMPERATURE = "sleep_temperature"
-CONF_POST_SLEEP_MODE_ACTION = "post_sleep_mode_action"
-CONF_POST_SLEEP_TEMPERATURE = "post_sleep_temperature"
 
 # Neue Konfigurationen für Türsensoren
 CONF_SENSOR_DOOR = "door_sensors"
