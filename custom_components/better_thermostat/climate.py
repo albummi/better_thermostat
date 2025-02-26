@@ -194,7 +194,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
                 device_class="better_thermostat",
                 state_class="better_thermostat_state",
                 entry.data.get(CONF_SLEEP_MODE, None),  # Hinzugefügt
-                entry.data.get(CONF_SLEEP_TEMPERATURE, None),  # Hinzugefügt
+                entry.data.get(CONF_SLEEP_TEMPERATURE, 18,0),  # Hinzugefügt
                 entry.data.get(CONF_POST_SLEEP_MODE_ACTION, "previous"),  # Hinzugefügt
                 entry.data.get(CONF_POST_SLEEP_TEMPERATURE, 20.0),  # Hinzugefügt
             )
