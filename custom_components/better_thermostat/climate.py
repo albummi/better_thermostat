@@ -381,10 +381,10 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         self.heating_power = 0.01
         self.last_heating_power_stats = []
         self.is_removed = False
-        self.sleep_mode = sleep_mode
-        self.sleep_temperature = sleep_temperature
-        self.post_sleep_mode_action = post_sleep_mode_action
-        self.post_sleep_temperature = post_sleep_temperature
+        self.sleep_mode = sleep_mode if sleep_mode is not None else False
+        self.sleep_temperature = sleep_temperature if sleep_temperature is not None else 20.0  # Default sleep temperature
+        self.post_sleep_mode_action = post_sleep_mode_action if post_sleep_mode_action is not None else "previous"
+        self.post_sleep_temperature = post_sleep_temperature if post_sleep_temperature is not None else 20.0  # Default post sleep temperature
         self._saved_hvac_mode = None
         self._saved_temperature = None
         self._saved_hvac_mode = None
