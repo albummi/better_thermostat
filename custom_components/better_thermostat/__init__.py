@@ -16,10 +16,10 @@ from .utils.const import (
     CONF_WINDOW_TIMEOUT_AFTER,
     CONF_DOOR_TIMEOUT,
     CONF_DOOR_TIMEOUT_AFTER,
-    CONF_SLEEP_MODE,
-    CONF_SLEEP_TEMPERATURE,
-    CONF_POST_SLEEP_MODE_ACTION,
-    CONF_POST_SLEEP_TEMPERATURE,
+    CONF_SLEEP_MODE,  # Hinzugefügt
+    CONF_SLEEP_TEMPERATURE,  # Hinzugefügt
+    CONF_POST_SLEEP_MODE_ACTION,  # Hinzugefügt
+    CONF_POST_SLEEP_TEMPERATURE,  # Hinzugefügt
     CalibrationMode,
 )
 
@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {}
-    hass.async_create_task(hass.config_entries.async_forward_entry_setups(entry, PLATFORMS))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
     return True
     
@@ -81,7 +81,7 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         new[CONF_DOOR_TIMEOUT] = 0
         config_entry.version = 3
         hass.config_entries.async_update_entry(config_entry, data=new)
-                                               
+                                                
     if config_entry.version == 3:
         new = {**config_entry.data}
         for trv in new[CONF_HEATER]:
@@ -116,15 +116,15 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         config_entry.version = 6
         hass.config_entries.async_update_entry(config_entry, data=new)
 
-    if config_entry.version == 6:
-        new = {**config_entry.data}
-        new[CONF_SLEEP_MODE] = False
-        new[CONF_SLEEP_TEMPERATURE] = None
-        new[CONF_POST_SLEEP_MODE_ACTION] = "previous"
-        new[CONF_POST_SLEEP_TEMPERATURE] = None
-        config_entry.version = 7
-        hass.config_entries.async_update_entry(config_entry, data=new)
-        
+    if config_entry.version == 6:  # Hinzugefügt
+        new = {**config_entry.data}  # Hinzugefügt
+        new[CONF_SLEEP_MODE] = new.get(CONF_SLEEP_MODE, None)  # Hinzugefügt
+        new[CONF_SLEEP_TEMPERATURE] = new.get(CONF_SLEEP_TEMPERATURE, None)  # Hinzugefügt
+        new[CONF_POST_SLEEP_MODE_ACTION] = new.get(CONF_POST_SLEEP_MODE_ACTION, "previous")  # Hinzugefügt
+        new[CONF_POST_SLEEP_TEMPERATURE] = new.get(CONF_POST_SLEEP_TEMPERATURE, 20.0)  # Hinzugefügt
+        config_entry.version = 7  # Hinzugefügt
+        hass.config_entries.async_update_entry(config_entry, data=new)  # Hinzugefügt
+
     _LOGGER.info("Migration to version %s successful", config_entry.version)
 
     return True
