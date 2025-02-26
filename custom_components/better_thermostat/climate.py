@@ -293,8 +293,8 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         sleep_mode,
         sleep_temperature,
         post_sleep_mode_action,
-        post_sleep_temperature, 
-    ):
+        post_sleep_temperature,
+        ):
         """Initialize the thermostat.
 
         Parameters
@@ -384,6 +384,8 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         self.sleep_temperature = sleep_temperature
         self.post_sleep_mode_action = post_sleep_mode_action
         self.post_sleep_temperature = post_sleep_temperature
+        self._saved_hvac_mode = None
+        self._saved_temperature = None
         self._saved_hvac_mode = None
         self._saved_temperature = None
 
