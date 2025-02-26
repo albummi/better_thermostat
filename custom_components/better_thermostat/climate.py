@@ -89,6 +89,10 @@ from .utils.const import (
     SERVICE_SET_TEMP_TARGET_TEMPERATURE,
     SUPPORT_FLAGS,
     VERSION,
+    CONF_SLEEP_MODE,
+    CONF_SLEEP_TEMPERATURE,
+    CONF_POST_SLEEP_MODE_ACTION,
+    CONF_POST_SLEEP_TEMPERATURE,
 )
 from .utils.controlling import control_queue, control_trv
 from .utils.helpers import convert_to_float, find_battery_entity, get_hvac_bt_mode
@@ -227,7 +231,27 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
             self._saved_temperature = None
             self.async_write_ha_state()
             await self.control_queue_task.put(self)
+            
+    async def set_sleep_mode(self):
+        """Set the thermostat to sleep mode."""
+        if self.bt_hvac_mode != HVACMode.OFF:
+            self._saved_hvac_mode = self.bt_hvac_mode
+            self._saved_temperature = self.bt_target_temp
+            self.bt_target_temp = self.sleep_temperature
+            self.bt_hvac_mode = HVACMode.HEAT
+            self.async_write_ha_state()
+            await self.control_queue_task.put(self)
 
+    async def restore_post_sleep_mode(self):
+        """Restore the thermostat from sleep mode"""
+        if self._saved_hvac_mode is not None:
+            self.bt_hvac_mode = self._saved_hvac_mode
+            self.bt_target_temp = self.post_sleep_temperature
+            self._saved_hvac_mode = None
+            self._saved_temperature = None
+            self.async_write_ha_state()
+            await self.control_queue_task.put(self)
+            
     async def reset_heating_power(self):
         """Reset heating power to default value."""
         self.heating_power = 0.01
@@ -266,6 +290,10 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         unique_id,
         device_class,
         state_class,
+        sleep_mode,
+        sleep_temperature,
+        post_sleep_mode_action,
+        post_sleep_temperature, 
     ):
         """Initialize the thermostat.
 
@@ -352,6 +380,12 @@ class BetterThermostat(ClimateEntity, RestoreEntity, ABC):
         self.heating_power = 0.01
         self.last_heating_power_stats = []
         self.is_removed = False
+        self.sleep_mode = sleep_mode
+        self.sleep_temperature = sleep_temperature
+        self.post_sleep_mode_action = post_sleep_mode_action
+        self.post_sleep_temperature = post_sleep_temperature
+        self._saved_hvac_mode = None
+        self._saved_temperature = None
 
     async def async_added_to_hass(self):
         """Run when entity about to be added.

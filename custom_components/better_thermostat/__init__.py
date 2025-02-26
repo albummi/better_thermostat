@@ -16,6 +16,10 @@ from .utils.const import (
     CONF_WINDOW_TIMEOUT_AFTER,
     CONF_DOOR_TIMEOUT,
     CONF_DOOR_TIMEOUT_AFTER,
+    CONF_SLEEP_MODE,
+    CONF_SLEEP_TEMPERATURE,
+    CONF_POST_SLEEP_MODE_ACTION,
+    CONF_POST_SLEEP_TEMPERATURE,
     CalibrationMode,
 )
 
@@ -110,6 +114,15 @@ async def async_migrate_entry(hass, config_entry: ConfigEntry):
         new = {**config_entry.data}
         new[CONF_DOOR_TIMEOUT_AFTER] = new[CONF_DOOR_TIMEOUT]
         config_entry.version = 6
+        hass.config_entries.async_update_entry(config_entry, data=new)
+
+    if config_entry.version == 6:
+        new = {**config_entry.data}
+        new[CONF_SLEEP_MODE] = False
+        new[CONF_SLEEP_TEMPERATURE] = None
+        new[CONF_POST_SLEEP_MODE_ACTION] = "previous"
+        new[CONF_POST_SLEEP_TEMPERATURE] = None
+        config_entry.version = 7
         hass.config_entries.async_update_entry(config_entry, data=new)
         
     _LOGGER.info("Migration to version %s successful", config_entry.version)
